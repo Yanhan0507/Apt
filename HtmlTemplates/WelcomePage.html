@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to Connexus</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/stylesheets/bootstrap.min.css" rel="stylesheet">
+      <!-- Custom styles for this template -->
+    <link href="/stylesheets/jumbotron.css" rel="stylesheet">
+
+
+</head>
+<body>
+
+    <!--Navigate Bar -->
+   <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          </button>
+          <a class="navbar-brand" href="#">Connexus</a>
+
+            <ul class="nav navbar-nav">
+            <!--<li class="active"><a href="#">Home</a></li>-->
+                <li><a href="#manage">Manage</a></li>
+                <li><a href="#create">Create</a></li>
+                <li><a href="#viewall">ViewAll</a></li>
+                <li><a href="#search">Search</a></li>
+                <li><a href="#trending">Trending</a></li>
+          </ul>
+        </div>
+
+
+        <div id="navbar" class="navbar-collapse navbar-right">
+            {% if user  %}
+            <p class="navbar-text">Signed in as {{ user.nickname() }}</p>  <a href="{{ url|safe }}" class="btn btn-default navbar-btn">{{ url_linktext }}</a>
+            {% else %}
+            <a href="{{ url|safe }}" class="btn btn-default navbar-btn">{{ url_linktext }}</a>
+            {% endif %}
+        </div>
+      </div>
+    </nav>
+
+
+    <!--Welcome Information Box-->
+    <div class="jumbotron">
+        <div class="container">
+        {% if user  %}
+          <h1>
+            Welcome, <b>{{ user.nickname() }}</b>! </h1>
+            <p>You can manage your streams, or <a href="{{ url|safe }}">{{ url_linktext }}</a></p>
+        {% else %}
+            <h1>Welcome, Guest!</h1>
+            <p>Please <a href="{{ url|safe }}">{{ url_linktext }}</a> to continue.</p>
+        {% endif %}
+            </div>
+    </div>
+
+</body>
+</html>
+{% endautoescape %}
