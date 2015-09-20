@@ -10,7 +10,7 @@ handlers:
   upload: favicon\.ico
 
 - url: .*
-  script: main.app
+  script: connexus_handlers.app
 
 libraries:
 - name: webapp2
