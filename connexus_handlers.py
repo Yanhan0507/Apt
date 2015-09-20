@@ -72,7 +72,8 @@ class LoginHandler(HTTPRequestHandler):
         self.response.write(template.render(template_values))
 
 
-class ManageHandler(HTTPRequestHandler):
+class ManagePageHandler(HTTPRequestHandler):
+    # GET: Render a management html page
     def get(self):
         user = users.get_current_user()
         if user:
@@ -88,9 +89,28 @@ class ManageHandler(HTTPRequestHandler):
             self.redirect('/login')
 
 
+class CreatePageHandler(HTTPRequestHandler):
+    # GET: Render a create html page
+    def get(self):
+        user = users.get_current_user()
+        if user:
+            logout_url = users.create_login_url(self.request.uri)
+            logout_linktext = 'Logout'
+            template_values = {
+            'user': user,
+            'url': logout_url,
+            'url_linktext': logout_linktext,
+            }
+            self.render('CreateStreamPage.html', **template_values)
+        else:
+            self.redirect('/login')
+
+
+
 app = webapp2.WSGIApplication([
     ('/', LoginHandler)
     , ('/login', LoginHandler)
-    , ('/manage', ManageHandler)
+    , ('/manage', ManagePageHandler)
+    , ('/create', CreatePageHandler)
     , ('/StreamServices', StreamService)]
     , debug=True)
