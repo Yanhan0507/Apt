@@ -11,7 +11,6 @@
 
 </head>
 <body>
-    <!--Navigation Bar-->
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
@@ -31,7 +30,7 @@
 
         <div id="navbar" class="navbar-collapse navbar-right">
             {% if user  %}
-            <p class="navbar-text">Signed in as {{ user.nickname() }}</p>  <a href="{{ url|safe }}" class="btn btn-default navbar-btn">{{ url_linktext }}</a>
+            <p class="navbar-text">  Hello! </p>  <a href="{{ url|safe }}" class="btn btn-default navbar-btn">{{ url_linktext }}</a>
             {% else %}
             <a href="{{ url|safe }}" class="btn btn-default navbar-btn">{{ url_linktext }}</a>
             {% endif %}
@@ -39,12 +38,43 @@
       </div>
     </nav>
 
-    <!--Management Box-->
+    <table class="table table-striped" style="position: absolute; top: 100px" align="center">
+      <tr>
+        <th>Name</th>
+        <th>Last New Picture</th>
+        <th>Views</th>
+        <th>Delete</th>
+      </tr>
+
+      {% for row in user_streams%}
+        <tr>
+          <td width="25%">
+            <a href="/viewstream?stream_id={{ row['stream_name'] }}">{{ row['stream_name'] }}</a>
+          </td>
+          <td width="25%">
+            {% if row['last_add'] %}
+                {{ row['last_add'] }}
+            {% else %}
+                -
+            {% endif %}
+          </td>
+          <td width="25%">
+                {% if row['last_add'] %}
+                    {{ row['views']}}
+                {% else %}
+                    -
+                {% endif %}
+          </td>
+          <td width="25%">
+            <input type="checkbox" name="stream_id" value="{{ row['stream_id'] }}">
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+
     <div class="jumbotron">
         <div class="container">
-
-            Welcome back, <b>{{ user.nickname() }}</b>. This is the management page.
-
+                Welcome back. This is the management page.
         </div>
     </div>
 </body>

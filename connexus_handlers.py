@@ -1,5 +1,6 @@
 from google.appengine.api import users
 from google.appengine.ext import ndb
+from Model import Image, Stream
 
 import webapp2
 import jinja2
@@ -8,7 +9,16 @@ import urllib
 import json
 from google.appengine.api import urlfetch
 # self defined classes
-from Stream_services import StreamService
+
+import webapp2
+
+from google.appengine.api import users
+from google.appengine.ext import blobstore
+from google.appengine.ext import ndb
+from google.appengine.ext.webapp import blobstore_handlers
+from google.appengine.ext.webapp.util import run_wsgi_app
+
+
 
 
 # SERVICES_URL = 'http://localhost:8080' #local
@@ -79,10 +89,13 @@ class ManagePageHandler(HTTPRequestHandler):
         if user:
             logout_url = users.create_login_url(self.request.uri)
             logout_linktext = 'Logout'
+            streams = ndb.Query(ancestor = ndb.Key('Account', user.user_id())).fetch()
+
             template_values = {
-            'user': user,
-            'url': logout_url,
-            'url_linktext': logout_linktext,
+                'user': user,
+                'url': logout_url,
+                'url_linktext': logout_linktext,
+                'user_streams': streams
             }
             self.render('management.html', **template_values)
         else:
@@ -107,10 +120,74 @@ class CreatePageHandler(HTTPRequestHandler):
 
 
 
+class StreamService(HTTPRequestHandler):
+    def post(self):
+
+        user_id = users.get_current_user().user_id()
+        stream_name = self.request.get("streamName")
+        cover_url = self.request.get("cover_url")
+
+        new_stream = Stream(parent = ndb.Key('Account', user_id)
+                            ,user_id = user_id
+                            ,stream_name = stream_name
+                            ,last_add = None
+                            ,cover_url = cover_url)
+        logout_url = users.create_login_url(self.request.uri)
+        logout_linktext = 'Logout'
+
+
+        new_stream.put()
+
+        self.redirect('/manage')
+
+class viewStream(HTTPRequestHandler):
+    def get(self):
+        user = users.get_current_user()
+        if user:
+            streams = ndb.Query(ancestor = ndb.Key('Account', user.user_id())).fetch()
+            stream_id = self.request.get("stream_id")
+
+            template_values = {
+                'stream' : []
+            }
+            self.render('ViewStream.html', **template_values)
+
+        else:
+            self.redirect('/login')
+
+
+class addImg(HTTPRequestHandler):
+    def get(self):
+        user_id = self.request.get("user_id")
+        stream_id = self.request.get("stream_id")
+        url = self.request.get()
+        if user_id:
+            streams = ndb.Query(ancestor = ndb.Key('Account', str(user_id))).fetch()
+            curStream = streams[stream_id]
+            curStream.addImage()
+
+        self.redirect('/viewstream')
+
+
+class deleteImg(HTTPRequestHandler):
+    def get(self):
+        pass
+
+
+
+
+
+
+
+
+
 app = webapp2.WSGIApplication([
     ('/', LoginHandler)
     , ('/login', LoginHandler)
     , ('/manage', ManagePageHandler)
     , ('/create', CreatePageHandler)
-    , ('/StreamServices', StreamService)]
+    , ('/StreamServices', StreamService)
+    , ('/viewstream', viewStream)
+    , ('stream/add', addImg)
+    , ('stream/delete', deleteImg)]
     , debug=True)
