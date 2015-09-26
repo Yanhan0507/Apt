@@ -9,8 +9,8 @@ handlers:
   static_files: favicon.ico
   upload: favicon\.ico
 
-- url: /stylesheets
-  static_dir: stylesheets
+- url: /css
+  static_dir: assets/css
 
 - url: .*
   script: connexus_handlers.app

@@ -28,7 +28,7 @@ SERVICE_URL = 'http://ee382v-apt-miniproject.appspot.com/'
 
 # HTML_TEMPLATES FOLDER
 JINJA_ENVIRONMENT = jinja2.Environment(
-    loader=jinja2.FileSystemLoader('HtmlTemplates'),
+    loader=jinja2.FileSystemLoader('templates'),
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
@@ -214,7 +214,7 @@ app = webapp2.WSGIApplication([
     , ('/login', LoginHandler)
     , ('/manage', ManagePageHandler)
     , ('/create', CreatePageHandler)
-    , ('/StreamServices', CreateStream)
+    , ('/createStream', CreateStream)
     , ('/viewstream', viewStream)
     , ('/upload_photo', addImg)
     , ('stream/delete', deleteImg)]
