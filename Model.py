@@ -54,7 +54,6 @@ class Stream(ndb.Model):
 class Subscription(ndb.Model):
     user_id = ndb.StringProperty()
     stream_id = ndb.StringProperty()
-    stream_name = ndb.StringProperty()
     subscribed_date = ndb.DateTimeProperty(auto_now_add=True)
 
     def deleteSubscription(self):
