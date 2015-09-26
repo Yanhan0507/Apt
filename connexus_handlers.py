@@ -94,7 +94,12 @@ class ManagePageHandler(HTTPRequestHandler):
             streams = ndb.Query(ancestor = ndb.Key('Account', user.user_id())).fetch()
 
             #get user subscriptions
-            subscribed_streams = Subscription.query(Subscription.user_id == user.user_id()).fetch()
+            subscribed_list = Subscription.query(Subscription.user_id == user.user_id()).fetch()
+            subscribed_streams = []
+            for subscribed_item in subscribed_list:
+                sub_stream = Stream.query(Stream.stream_id == subscribed_item.stream_id)
+                if sub_stream:
+                    subscribed_streams.append(sub_stream)
 
             template_values = {
                 'user': user,
@@ -260,8 +265,45 @@ class viewAllStream(HTTPRequestHandler):
             'url': logout_url,
             'url_linktext': logout_linktext,
         }
-        template = JINJA_ENVIRONMENT.get_template('ViewAllStream.html')
-        self.response.write(template.render(template_values))
+        self.render('ViewAllStream.html', template_values)
+
+# Subscription handler class:
+#   process get requests for both subscribing and un-subscribing
+#   required fields: stream_id; (user exists in the request).
+class SubscriptionHandler(HTTPRequestHandler):
+    def get(self):
+        stream_id = self.request.get('stream_id')
+        current_user = users.get_current_user()
+        if current_user and stream_id:
+            # check if the request is to subscribe or un-subscribe
+            subscribe_bool = self.request.get('subscribe_bool') == 'true'
+            if subscribe_bool:
+                # subscribing request
+                new_subscription_entry = Subscription(user_id = current_user.user_id(),
+                                           stream_id = stream_id)
+                new_subscription_entry.put()
+                self.redirect('/manage')
+            else:
+                # ub-subscribing request
+                # fetch the data entry of this subscription
+                subscription_entry = Subscription.query(Subscription.stream_id == stream_id).fetch()
+                if subscription_entry:
+                    subscription_entry.deleteSubscription()
+                    self.redirect('/manage')
+                else:
+                    # no such subscription entry can be found
+                    template_values = {
+                        'error_msg' : "no such subscription entry can be found. (userid=" + current_user.user_id() +", streamid="+ stream_id + ")"
+                    }
+                    self.render("Error.html", template_values)
+        else:
+            #no user can be found in the session; transfer to error page
+            template_values = {
+                'error_msg' : "no user can be found in the session"
+            }
+            self.render("Error.html", template_values)
+
+
 
 app = webapp2.WSGIApplication([
     ('/', LoginHandler)
@@ -275,5 +317,6 @@ app = webapp2.WSGIApplication([
     , ('/view_photo/([^/]+)?', ViewPhotoHandler)
     , ('/upload_photo', addImg)
     , ('/stream/delete', deleteImg)
-    , ('/deleteStream/all', deleteStreamAll) ]
+    , ('/deleteStream/all', deleteStreamAll)
+    , ('/subscribe', SubscriptionHandler)]
     , debug=True)

@@ -30,8 +30,7 @@
 
         <div id="navbar" class="navbar-collapse navbar-right">
             {% if user  %}
-            <p class="navbar-text">Signed in as {{ user.nickname() }}</p>
-            <!--<a href="{{ url|safe }}" class="btn btn-default navbar-btn">{{ url_linktext }}</a>-->
+            <p class="navbar-text">Signed in as {{ user.nickname() }}</p> <a href="{{ url|safe }}" class="btn btn-default navbar-btn">{{ url_linktext }}</a>
             {% else %}
             <a href="{{ url|safe }}" class="btn btn-default navbar-btn">{{ url_linktext }}</a>
             {% endif %}
@@ -42,7 +41,7 @@
 
 
     <h3>Streams I own:</h3>
-        <table class="table table-striped" style="position: absolute; top: 100px" align="center">
+        <table class="table table-striped" align="center">
           <tr>
             <th>Name</th>
             <th>Last New Picture</th>
@@ -77,6 +76,41 @@
         </table>
 
     <h3>Streams I subscribe to:</h3>
+        <table class="table table-striped" align="center">
+            <tr>
+                <th>Name</th>
+                <th>Last New Picture</th>
+                <th>Number of Pictures</th>
+                <th>Views</th>
+                <th>Unsubscribe</th>
+            </tr>
+
+            {% for sub_stream in subscribed_streams %}
+            <tr>
+                <td width="30%">
+                    <!--name column-->
+                    <a href="/viewStream?stream_id={{ sub_stream['stream_id'] }}">{{ sub_stream['stream_name'] }}</a>
+                </td>
+                <td width="20%">
+                    <!--Last New Picture column-->
+                    {{ sub_stream['last_add'] }}
+                </td>
+                <td width="20%">
+                    <!--Nrof_pics column-->
+                    <!--TODO-->
+                </td>
+                <td width="10%">
+                    <!--Views column-->
+                    <!--TODO-->
+                </td>
+                <td width="20%">
+                    <!--Unsubscribe column-->
+                    <a href="/subscribe?subscribe_bool=false&stream_id={{ sub_stream['stream_id'] }}"> Unsubscribe</a>
+                </td>
+            </tr>
+            {% endfor %}
+
+        </table>
 
 
 
