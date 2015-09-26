@@ -146,6 +146,7 @@ class viewStream(HTTPRequestHandler):
         if user:
             streams = ndb.Query(ancestor = ndb.Key('Account', user.user_id())).fetch()
             stream_id = self.request.get("stream_id")
+
             # create photo upload url
             upload_url = blobstore.create_upload_url('/upload_photo')
             template_values = {
@@ -160,6 +161,7 @@ class viewStream(HTTPRequestHandler):
 
         else:
             self.redirect('/login')
+
 
 
 class addImg(blobstore_handlers.BlobstoreUploadHandler):
@@ -187,7 +189,6 @@ class addImg(blobstore_handlers.BlobstoreUploadHandler):
             print "Fail to add user photo ", user_photo, "to stream ", stream_id
 
         # url = self.request.get()
-
 
         self.redirect('/viewstream')
 
