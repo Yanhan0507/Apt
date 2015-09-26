@@ -1,6 +1,8 @@
 from google.appengine.api import users
 from google.appengine.ext import ndb
 from Model import Image, Stream
+import uuid
+
 
 import webapp2
 import jinja2
@@ -120,20 +122,21 @@ class CreatePageHandler(HTTPRequestHandler):
 
 
 
-class StreamService(HTTPRequestHandler):
+class CreateStream(HTTPRequestHandler):
     def post(self):
 
         user_id = users.get_current_user().user_id()
         stream_name = self.request.get("streamName")
+        stream_id = uuid.uuid4()
         cover_url = self.request.get("cover_url")
 
         new_stream = Stream(parent = ndb.Key('Account', user_id)
                             ,user_id = user_id
+                            ,stream_id = str(stream_id)
                             ,stream_name = stream_name
                             ,last_add = None
                             ,cover_url = cover_url)
-        # logout_url = users.create_login_url(self.request.uri)
-        # logout_linktext = 'Logout'
+
 
 
         new_stream.put()
@@ -144,20 +147,24 @@ class viewStream(HTTPRequestHandler):
     def get(self):
         user = users.get_current_user()
         if user:
-            streams = ndb.Query(ancestor = ndb.Key('Account', user.user_id())).fetch()
             stream_id = self.request.get("stream_id")
+
+
+            curStream = Stream.query(Stream.user_id == user.user_id(), Stream.stream_id == stream_id).fetch()
+            print len(curStream)
+
 
             # create photo upload url
             upload_url = blobstore.create_upload_url('/upload_photo')
             template_values = {
                 'user' : user,
-                'stream' : [],
+                'stream_id' : stream_id,
+                'stream' : curStream,
                 'upload_url' : upload_url
             }
 
             template = JINJA_ENVIRONMENT.get_template('ViewStream.html')
             self.response.write(template.render(template_values))
-            # self.render('ViewStream.html', **template_values)
 
         else:
             self.redirect('/login')
@@ -172,19 +179,16 @@ class addImg(blobstore_handlers.BlobstoreUploadHandler):
 
         #get the blob store object
         upload = self.get_uploads()[0]
+        imgId = uuid.uuid4()
         user_photo = Image(user_id = users.get_current_user().user_id(),
+                           imgId = str(imgId),
                            content = description,
-                            blob_key=upload.key()
+                           blob_key=upload.key()
                             )
-        if user_photo:
-            curStreams = ndb.Query(ancestor = ndb.Key('Account', str(user_id))).fetch()
-            print curStreams
-            curStream = None
-            for stream in curStreams:
-                if stream.stream_name == stream_id:
-                    curStream = stream
-            if curStream:
-                curStream.addImage(user_photo)
+        curStream = Stream.query(ancestor = ndb.key('Account', str(user_id))).filter(Stream.stream_id == stream_id).get()
+        if curStream:
+            curStream.addImage(user_photo)
+
         else:
             print "Fail to add user photo ", user_photo, "to stream ", stream_id
 
@@ -210,7 +214,7 @@ app = webapp2.WSGIApplication([
     , ('/login', LoginHandler)
     , ('/manage', ManagePageHandler)
     , ('/create', CreatePageHandler)
-    , ('/StreamServices', StreamService)
+    , ('/StreamServices', CreateStream)
     , ('/viewstream', viewStream)
     , ('/upload_photo', addImg)
     , ('stream/delete', deleteImg)]

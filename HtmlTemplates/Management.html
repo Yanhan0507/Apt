@@ -50,7 +50,7 @@
       {% for row in user_streams%}
         <tr>
           <td width="25%">
-            <a href="/viewstream?stream_id={{ row['stream_name'] }}">{{ row['stream_name'] }}</a>
+            <a href="/viewstream?stream_id={{ row['stream_id'] }}">{{ row['stream_name'] }}</a>
           </td>
           <td width="25%">
             {% if row['last_add'] %}
