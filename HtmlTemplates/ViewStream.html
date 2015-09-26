@@ -32,7 +32,8 @@
 
         <div id="navbar" class="navbar-collapse navbar-right">
             {% if user  %}
-            <p class="navbar-text">Signed in as {{ user.nickname() }}</p>  <a href="{{ url|safe }}" class="btn btn-default navbar-btn">{{ url_linktext }}</a>
+            <p class="navbar-text">Signed in as {{ user.nickname() }}</p>
+            <!--<a href="{{ url|safe }}" class="btn btn-default navbar-btn">{{ url_linktext }}</a>-->
             {% else %}
             <a href="{{ url|safe }}" class="btn btn-default navbar-btn">{{ url_linktext }}</a>
             {% endif %}
@@ -40,22 +41,32 @@
       </div>
     </nav>
 
-    <!--Create a new Stream Box-->
-    <div class="jumbotron">
-        <div class="container">
-            <form action="/StreamServices"  enctype="multipart/form-data" method="post">
-                <label>Cover Url:</label>
-                <div> <input type="text" id="cover_url" name="cover_url"> </div>
-                <label>Stream Name:</label>
-                <div><input type="text" name="streamName"/></div>
-                <label> Description </label>
-                <div><textarea name="content" rows="3" cols="60"></textarea></div>
-                <div>
-                    <button class="btn btn-default" type="submit">Create Stream</button>
-                </div>
-           </form>
+
+    <table id = "pictures">
+        <tr>
+            {% for blob_key in stream %}
+                <td> <img src = "{{blob_key}}"> </img>  </td>>  </td>
+            {% endfor %}
+        </tr>
+    </table>
+
+
+
+
+    <form id = "photo_upload" action = "{{upload_url}}" method="POST"
+          enctype="multipart/form-data" style="position: absolute; top: 150px" align="center">
+
+        <input type = "hidden" name = "user_id" value = "{{user_id}}">
+        <input type = "hidden" name = "stream_id" value = "{{stream_id}}">
+        <div>
+            <input type="file" name="photo_file">
+            <input type="text" name = "description"/>
+            <!--<input type="file" name="photo" size="25" />-->
         </div>
-    </div>
+        <div>
+            <input type="submit" name="submit" value="Submit" />
+        </div>
+    </form>
 
 </body>
 </html>
