@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexus: Create a stream</title>
+
+            <!-- Bootstrap core CSS -->
+    <link href="/stylesheets/bootstrap.min.css" rel="stylesheet">
+      <!-- Custom styles for this template -->
+    <link href="/stylesheets/jumbotron.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <!--Navigation Bar-->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          </button>
+          <a class="navbar-brand" href="#">Connexus</a>
+          <ul class="nav navbar-nav">
+            <!--<li class="active"><a href="#">Home</a></li>-->
+                <li><a href="/manage">Manage</a></li>
+                <li class="active"><a href="/create">Create</a></li>
+                <li><a href="/viewall">ViewAll</a></li>
+                <li><a href="/search">Search</a></li>
+                <li><a href="/trending">Trending</a></li>
+          </ul>
+        </div>
+
+
+        <div id="navbar" class="navbar-collapse navbar-right">
+            {% if user  %}
+            <p class="navbar-text">Signed in as {{ user.nickname() }}</p>
+            <!--<a href="{{ url|safe }}" class="btn btn-default navbar-btn">{{ url_linktext }}</a>-->
+            {% else %}
+            <a href="{{ url|safe }}" class="btn btn-default navbar-btn">{{ url_linktext }}</a>
+            {% endif %}
+        </div>
+      </div>
+    </nav>
+
+
+    <table id = "pictures">
+        <tr>
+            {% for blob_key in stream %}
+                <td> <img src = "{{blob_key}}"> </img>  </td>>  </td>
+            {% endfor %}
+        </tr>
+    </table>
+
+
+    <form id = "photo_upload" action = "{{upload_url}}" method="POST"
+          enctype="multipart/form-data" style="position: absolute; top: 150px" align="center">
+
+        <input type = "hidden" name = "stream_id" value = "{{stream_id}}">
+        <div>
+            <input type="file" name="photo_file">
+            <input type="text" name = "description"/>
+            <!--<input type="file" name="photo" size="25" />-->
+
+        </div>
+        <div>
+            <input type="submit" name="submit" value="Submit" />
+        </div>
+    </form>
+
+</body>
+</html>
