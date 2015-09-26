@@ -94,13 +94,14 @@ class ManagePageHandler(HTTPRequestHandler):
             streams = ndb.Query(ancestor = ndb.Key('Account', user.user_id())).fetch()
 
             #get user subscriptions
-            subscribed_streams = Subscription.query(user_id = user_id).fetch()
+            subscribed_streams = Subscription.query(Subscription.user_id == user.user_id()).fetch()
 
             template_values = {
                 'user': user,
                 'url': logout_url,
                 'url_linktext': logout_linktext,
-                'user_streams': streams
+                'user_streams': streams,
+                'subscribed_streams':subscribed_streams
             }
             template = JINJA_ENVIRONMENT.get_template('management.html')
             self.response.write(template.render(template_values))
