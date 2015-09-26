@@ -23,7 +23,7 @@
             <!--<li class="active"><a href="#">Home</a></li>-->
                 <li><a href="/manage">Manage</a></li>
                 <li class="active"><a href="/create">Create</a></li>
-                <li><a href="/viewall">ViewAll</a></li>
+                <li><a href="/viewAllStream">ViewAll</a></li>
                 <li><a href="/search">Search</a></li>
                 <li><a href="/trending">Trending</a></li>
           </ul>
@@ -42,18 +42,18 @@
     </nav>
 
 
-    <table id = "pictures">
-        <tr>
-            {% for blob_key in blob_key_lst %}
-
-                <td> <img src = "/view_photo/{{blob_key}}"> </img>  </td>>  </td>
-                <div>
-                    <input type="submit" name="delete" value="delete" />
+    <!--<table id = "pictures">-->
+        <!--<tr>-->
+            {% for i in range(length) %}
+                 <div>
+                    <td> <img src = "/view_photo/{{blob_key_lst[i]}}"> </img>  </td>>
+                    <li><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></li>
                 </div>
+    <br>
             {% endfor %}
 
-        </tr>
-    </table>
+        <!--</tr>-->
+    <!--</table>-->
 
 
     <form id = "photo_upload" action = "{{upload_url}}" method="POST"

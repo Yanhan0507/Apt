@@ -143,6 +143,8 @@ class CreateStream(HTTPRequestHandler):
 
         self.redirect('/manage')
 
+
+
 class viewStream(HTTPRequestHandler):
     def get(self):
         user = users.get_current_user()
@@ -150,6 +152,7 @@ class viewStream(HTTPRequestHandler):
             stream_id = self.request.get("stream_id")
             stream_lst = Stream.query(Stream.user_id == user.user_id(), Stream.stream_id == stream_id).fetch()
             curStream = stream_lst[0]
+            print "length in viewStream: " + str(len(curStream.image_id_lst))
             # create photo upload url
             upload_url = blobstore.create_upload_url('/upload_photo')
             template_values = {
@@ -157,7 +160,8 @@ class viewStream(HTTPRequestHandler):
                 'stream_id' : stream_id,
                 'blob_key_lst' : curStream.blob_key_lst,
                 'image_id_lst' : curStream.image_id_lst,
-                'upload_url' : upload_url
+                'upload_url' : upload_url,
+                'length': len(curStream.blob_key_lst)
             }
 
             template = JINJA_ENVIRONMENT.get_template('ViewStream.html')
@@ -191,14 +195,21 @@ class addImg(blobstore_handlers.BlobstoreUploadHandler):
         else:
             print "Fail to add user photo ", user_photo, "to stream ", stream_id
 
-        # url = self.request.get()
-
-        self.redirect('/viewstream?'+'stream_id='+stream_id)
+        self.redirect('/viewStream?'+'stream_id='+stream_id)
 
 
 class deleteImg(HTTPRequestHandler):
     def get(self):
-        pass
+        photo_Key = self.request.get("photo_Key")
+        stream_id = self.request.get("stream_id")
+        user_id = users.get_current_user().user_id()
+        stream_lst = Stream.query(Stream.user_id == user_id, Stream.stream_id == stream_id).fetch()
+        img_lst = Image.query(Image.user_id == user_id, Image.img_id == photo_Key).fetch()
+        curStream = stream_lst[0]
+        curImg = img_lst[0]
+        curStream.deleteImage(curImg)
+        self.redirect('/viewStream?'+'stream_id='+stream_id)
+
 
 
 class ViewPhotoHandler(blobstore_handlers.BlobstoreDownloadHandler):
@@ -208,7 +219,44 @@ class ViewPhotoHandler(blobstore_handlers.BlobstoreDownloadHandler):
         else:
             self.send_blob(photo_key)
 
+class deleteStream(HTTPRequestHandler):
+    def get(self):
+        stream_id = self.request.get("stream_id")
+        user_id = users.get_current_user().user_id()
+        stream_lst = Stream.query(Stream.user_id == user_id, Stream.stream_id == stream_id).fetch()
+        curStream = stream_lst[0]
+        curStream.deleteStream()
+        self.redirect('/manage')
 
+class deleteStreamAll(HTTPRequestHandler):
+    def get(self):
+        user_id = users.get_current_user().user_id()
+        stream_lst = Stream.query(Stream.user_id == user_id).fetch()
+        print stream_lst
+        for stream in stream_lst:
+            print stream
+            stream.deleteStream()
+        self.redirect('/manage')
+
+
+class viewAllStream(HTTPRequestHandler):
+    def get(self):
+        user_id = users.get_current_user().user_id()
+
+        stream_lst = Stream.query(Stream.user_id == user_id).fetch()
+
+
+
+        logout_url = users.create_login_url(self.request.uri)
+        logout_linktext = 'Logout'
+        template_values = {
+            'streams' : stream_lst,
+            'user' : users.get_current_user(),
+            'url': logout_url,
+            'url_linktext': logout_linktext,
+        }
+        template = JINJA_ENVIRONMENT.get_template('ViewAllStream.html')
+        self.response.write(template.render(template_values))
 
 app = webapp2.WSGIApplication([
     ('/', LoginHandler)
@@ -216,8 +264,11 @@ app = webapp2.WSGIApplication([
     , ('/manage', ManagePageHandler)
     , ('/create', CreatePageHandler)
     , ('/createStream', CreateStream)
-    , ('/viewstream', viewStream)
+    , ('/deleteStream', deleteStream)
+    , ('/viewStream', viewStream)
+    , ('/viewAllStream', viewAllStream)
     , ('/view_photo/([^/]+)?', ViewPhotoHandler)
     , ('/upload_photo', addImg)
-    , ('stream/delete', deleteImg)]
+    , ('/stream/delete', deleteImg)
+    , ('/deleteStream/all', deleteStreamAll) ]
     , debug=True)
