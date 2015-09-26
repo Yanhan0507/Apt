@@ -1,5 +1,5 @@
-import uuid
 from google.appengine.ext import ndb
+
 
 class Image(ndb.Model):
     img_id = ndb.StringProperty()
@@ -27,6 +27,7 @@ class Stream(ndb.Model):
         self.last_add = image.date
         self.image_id_lst.insert(0, image.img_id)
         self.put()
+
     def deleteImage(self, image):
         if str(image.img_id) in self.image_id_lst:
             print "size of blobkey before: " + str(len(self.image_id_lst))
@@ -38,11 +39,25 @@ class Stream(ndb.Model):
             key.delete()
             print "get2: " + str(key.get())
             self.put()
+
     def deleteStream(self):
         key = self.put()
         key.delete()
 
+# Subscription Data Model:
+#   Each object indicates a subscription relationship between a user and a stream
+#   Method Calls:
+#       (x)addSubscription: calls when a user wants to subscribe a stream,
+#       deleteSubscription: calls when a user wants to un-subscribe a stream
+#                           or the stream has been removed by the creator.
 
+class Subscription(ndb.Model):
+    user_id = ndb.StringProperty()
+    stream_id = ndb.StringProperty()
+    subscribed_date = ndb.DateTimeProperty(auto_now_add=True)
 
+    def deleteSubscription(self):
+        key = self.put()
+        key.delete()
 
 

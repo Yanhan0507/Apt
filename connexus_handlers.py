@@ -1,6 +1,6 @@
 from google.appengine.api import users
 from google.appengine.ext import ndb
-from Model import Image, Stream
+from Model import Image, Stream, Subscription
 import uuid
 
 
@@ -93,13 +93,17 @@ class ManagePageHandler(HTTPRequestHandler):
             logout_linktext = 'Logout'
             streams = ndb.Query(ancestor = ndb.Key('Account', user.user_id())).fetch()
 
+            #get user subscriptions
+            subscribed_streams = Subscription.query(user_id = user_id).fetch()
+
             template_values = {
                 'user': user,
                 'url': logout_url,
                 'url_linktext': logout_linktext,
                 'user_streams': streams
             }
-            self.render('management.html', **template_values)
+            template = JINJA_ENVIRONMENT.get_template('management.html')
+            self.response.write(template.render(template_values))
         else:
             self.redirect('/login')
 

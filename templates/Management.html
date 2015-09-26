@@ -39,44 +39,46 @@
       </div>
     </nav>
 
-    <table class="table table-striped" style="position: absolute; top: 100px" align="center">
-      <tr>
-        <th>Name</th>
-        <th>Last New Picture</th>
-        <th>Views</th>
-        <th> <a href = "/deleteStream/all"> Delete </a> </th>
-      </tr>
 
-      {% for row in user_streams%}
-        <tr>
-          <td width="25%">
-            <a href="/viewStream?stream_id={{ row['stream_id'] }}">{{ row['stream_name'] }}</a>
-          </td>
-          <td width="25%">
-            {% if row['last_add'] %}
-                {{ row['last_add'] }}
-            {% else %}
-                -
-            {% endif %}
-          </td>
-          <td width="25%">
+
+    <h3>Streams I own:</h3>
+        <table class="table table-striped" style="position: absolute; top: 100px" align="center">
+          <tr>
+            <th>Name</th>
+            <th>Last New Picture</th>
+            <th>Views</th>
+            <th> <a href = "/deleteStream/all"> Delete </a> </th>
+          </tr>
+
+          {% for row in user_streams%}
+            <tr>
+              <td width="25%">
+                <a href="/viewStream?stream_id={{ row['stream_id'] }}">{{ row['stream_name'] }}</a>
+              </td>
+              <td width="25%">
                 {% if row['last_add'] %}
-                    {{ row['views']}}
+                    {{ row['last_add'] }}
                 {% else %}
                     -
                 {% endif %}
-          </td>
-          <td width="25%">
-            <a href="/deleteStream?stream_id={{row['stream_id'] }}"> delete </a>
-          </td>
-        </tr>
-      {% endfor %}
-    </table>
+              </td>
+              <td width="25%">
+                    {% if row['last_add'] %}
+                        {{ row['views']}}
+                    {% else %}
+                        -
+                    {% endif %}
+              </td>
+              <td width="25%">
+                <a href="/deleteStream?stream_id={{row['stream_id'] }}"> delete </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </table>
 
-    <div class="jumbotron">
-        <div class="container">
-                Welcome back. This is the management page.
-        </div>
-    </div>
+    <h3>Streams I subscribe to:</h3>
+
+
+
 </body>
 </html>
