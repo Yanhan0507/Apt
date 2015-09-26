@@ -44,9 +44,14 @@
 
     <table id = "pictures">
         <tr>
-            {% for blob_key in stream %}
-                <td> <img src = "{{blob_key}}"> </img>  </td>>  </td>
+            {% for blob_key in blob_key_lst %}
+
+                <td> <img src = "/view_photo/{{blob_key}}"> </img>  </td>>  </td>
+                <div>
+                    <input type="submit" name="delete" value="delete" />
+                </div>
             {% endfor %}
+
         </tr>
     </table>
 

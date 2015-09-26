@@ -148,26 +148,24 @@ class viewStream(HTTPRequestHandler):
         user = users.get_current_user()
         if user:
             stream_id = self.request.get("stream_id")
-
-
-            curStream = Stream.query(Stream.user_id == user.user_id(), Stream.stream_id == stream_id).fetch()
-            print len(curStream)
-
-
+            stream_lst = Stream.query(Stream.user_id == user.user_id(), Stream.stream_id == stream_id).fetch()
+            curStream = stream_lst[0]
             # create photo upload url
             upload_url = blobstore.create_upload_url('/upload_photo')
             template_values = {
                 'user' : user,
                 'stream_id' : stream_id,
-                'stream' : curStream,
+                'blob_key_lst' : curStream.blob_key_lst,
+                'image_id_lst' : curStream.image_id_lst,
                 'upload_url' : upload_url
             }
 
             template = JINJA_ENVIRONMENT.get_template('ViewStream.html')
             self.response.write(template.render(template_values))
-
         else:
             self.redirect('/login')
+
+
 
 
 
@@ -179,22 +177,23 @@ class addImg(blobstore_handlers.BlobstoreUploadHandler):
 
         #get the blob store object
         upload = self.get_uploads()[0]
-        imgId = uuid.uuid4()
+        img_id = uuid.uuid4()
         user_photo = Image(user_id = users.get_current_user().user_id(),
-                           imgId = str(imgId),
+                           img_id = str(img_id),
                            content = description,
-                           blob_key=upload.key()
+                           blob_key = upload.key()
                             )
-        curStream = Stream.query(ancestor = ndb.key('Account', str(user_id))).filter(Stream.stream_id == stream_id).get()
+        stream_lst = Stream.query(Stream.user_id == user_id, Stream.stream_id == stream_id).fetch()
+        curStream = stream_lst[0]
         if curStream:
+            print "addImg>> stream id:", stream_id, ", list length: ", len(stream_lst)
             curStream.addImage(user_photo)
-
         else:
             print "Fail to add user photo ", user_photo, "to stream ", stream_id
 
         # url = self.request.get()
 
-        self.redirect('/viewstream')
+        self.redirect('/viewstream?'+'stream_id='+stream_id)
 
 
 class deleteImg(HTTPRequestHandler):
@@ -202,10 +201,12 @@ class deleteImg(HTTPRequestHandler):
         pass
 
 
-
-
-
-
+class ViewPhotoHandler(blobstore_handlers.BlobstoreDownloadHandler):
+    def get(self, photo_key):
+        if not blobstore.get(photo_key):
+            self.error(404)
+        else:
+            self.send_blob(photo_key)
 
 
 
@@ -216,6 +217,7 @@ app = webapp2.WSGIApplication([
     , ('/create', CreatePageHandler)
     , ('/createStream', CreateStream)
     , ('/viewstream', viewStream)
+    , ('/view_photo/([^/]+)?', ViewPhotoHandler)
     , ('/upload_photo', addImg)
     , ('stream/delete', deleteImg)]
     , debug=True)
