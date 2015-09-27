@@ -2,9 +2,9 @@ __author__ = 'henry'
 
 
 def main():
-    li =[1, 2]
-    for i in range(len(li)):
-        print li[i]
+    for i in range(4):
+        if (i+1) % 3 == 0:
+            p
 
 if __name__ == '__main__':
     main()

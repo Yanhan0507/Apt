@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title></title>
+
+
+                <!-- Bootstrap core CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+      <!-- Custom styles for this template -->
+    <link href="/css/jumbotron.css" rel="stylesheet">
+
 </head>
 <body>
     <nav class="navbar navbar-inverse navbar-fixed-top">
@@ -37,9 +44,9 @@
       <tr>
         {% for stream in streams %}
             <td>
-              <a href="/viewStream?stream_id={{ stream['stream_id']}}">
+              <a href="/viewStream?stream_id={{ stream['stream_id']}}&&user_id={{stream['user_id']}}">
               {% if stream.cover_url %}
-                  <img src="stream.cover_url"  style="width:128px;height:128px;">  </img>
+                  <img src="{{stream.cover_url}}"  style="width:128px;height:128px;">  </img>
                    <!--<img src="file:///Users/henry/Desktop/download.jpeg"  style="width:128px;height:128px;">  </img>-->
               {% endif %}
               <p><h3>{{ stream['stream_name'] }}</h3></p>

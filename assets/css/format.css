@@ -1,0 +1,9 @@
+#picTable{
+         width: 700px;
+         display: block;
+         height: auto;
+
+         float: left; width: 200px;
+         height: 200px;
+         margin: 5px 8px;
+     }

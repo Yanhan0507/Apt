@@ -157,23 +157,25 @@ class CreateStream(HTTPRequestHandler):
 
 class viewStream(HTTPRequestHandler):
     def get(self):
-        user = users.get_current_user()
-        if user:
+        user_id = self.request.get("user_id")
+        curUser = users.get_current_user()
+        if user_id:
             stream_id = self.request.get("stream_id")
-            stream_lst = Stream.query(Stream.user_id == user.user_id(), Stream.stream_id == stream_id).fetch()
-            curStream = stream_lst[0]
-            print "length in viewStream: " + str(len(curStream.image_id_lst))
+            stream_lst = Stream.query(Stream.user_id == user_id, Stream.stream_id == stream_id).fetch()
+            curStream = []
+            if len(stream_lst) >= 0:
+                curStream = stream_lst[0]
             # create photo upload url
             upload_url = blobstore.create_upload_url('/upload_photo')
             template_values = {
-                'user' : user,
+                'user' : curUser,
                 'stream_id' : stream_id,
+                'stream_owner': curStream.user_id,
                 'blob_key_lst' : curStream.blob_key_lst,
                 'image_id_lst' : curStream.image_id_lst,
                 'upload_url' : upload_url,
                 'length': len(curStream.blob_key_lst)
             }
-
             template = JINJA_ENVIRONMENT.get_template('ViewStream.html')
             self.response.write(template.render(template_values))
         else:
@@ -253,8 +255,8 @@ class viewAllStream(HTTPRequestHandler):
     def get(self):
         user_id = users.get_current_user().user_id()
 
-        stream_lst = Stream.query(Stream.user_id == user_id).fetch()
 
+        stream_lst = Stream.query().fetch()
 
 
         logout_url = users.create_login_url(self.request.uri)
@@ -265,7 +267,7 @@ class viewAllStream(HTTPRequestHandler):
             'url': logout_url,
             'url_linktext': logout_linktext,
         }
-        self.render('ViewAllStream.html', template_values)
+        self.render('ViewAllStream.html', **template_values)
 
 # Subscription handler class:
 #   process get requests for both subscribing and un-subscribing
@@ -295,13 +297,13 @@ class SubscriptionHandler(HTTPRequestHandler):
                     template_values = {
                         'error_msg' : "no such subscription entry can be found. (userid=" + current_user.user_id() +", streamid="+ stream_id + ")"
                     }
-                    self.render("Error.html", template_values)
+                    self.render("Error.html", **template_values)
         else:
             #no user can be found in the session; transfer to error page
             template_values = {
                 'error_msg' : "no user can be found in the session"
             }
-            self.render("Error.html", template_values)
+            self.render("Error.html", **template_values)
 
 
 

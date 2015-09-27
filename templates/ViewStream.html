@@ -8,6 +8,7 @@
     <link href="/css/bootstrap.min.css" rel="stylesheet">
       <!-- Custom styles for this template -->
     <link href="/css/jumbotron.css" rel="stylesheet">
+     <!--<link href="/css/format.css" rel="stylesheet">-->
 </head>
 
 <body>
@@ -41,35 +42,40 @@
       </div>
     </nav>
 
-
-    <!--<table id = "pictures">-->
-        <!--<tr>-->
+    <div>
+        <table id = "pictures">
             {% for i in range(length) %}
-                 <div>
-                    <td> <img src = "/view_photo/{{blob_key_lst[i]}}"> </img>  </td>>
-                    <li><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></li>
-                </div>
-    <br>
+                <tr>
+                    <td>
+                        <img src = "/view_photo/{{blob_key_lst[i]}}">
+                            <li align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></li>
+                         </img>
+
+                    </td>
+                    </tr>
             {% endfor %}
+        </table>
+    </div>
 
-        <!--</tr>-->
-    <!--</table>-->
-
-
-    <form id = "photo_upload" action = "{{upload_url}}" method="POST"
-          enctype="multipart/form-data" style="position: absolute; top: 150px" align="center">
-
-        <input type = "hidden" name = "stream_id" value = "{{stream_id}}">
+    {% if user.user_id() == stream_owner %}
         <div>
-            <input type="file" name="photo_file">
-            <input type="text" name = "description"/>
-            <!--<input type="file" name="photo" size="25" />-->
+            <form id = "photo_upload" action = "{{upload_url}}" method="POST"
+                  enctype="multipart/form-data" style="position: absolute; top: 150px" align="center">
+                <input type = "hidden" name = "stream_id" value = "{{stream_id}}">
+                <input type="file" name="photo_file">
+                <input type="text" name = "description"/>
+                <!--<input type="file" name="photo" size="25" />-->
+                <br>
+                    <input type="submit" name="submit" value="Submit" />
+            </form>
+        </div>
+    {% endif %}
 
-        </div>
-        <div>
-            <input type="submit" name="submit" value="Submit" />
-        </div>
-    </form>
+    <div>
+        <a href="/subscribe?stream_id={{stream_id}}&subscribe_bool=true">  Subscribe this stream!! </a>
+    </div>
+
+
 
 </body>
 </html>
