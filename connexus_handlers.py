@@ -97,9 +97,9 @@ class ManagePageHandler(HTTPRequestHandler):
             subscribed_list = Subscription.query(Subscription.user_id == user.user_id()).fetch()
             subscribed_streams = []
             for subscribed_item in subscribed_list:
-                sub_stream = Stream.query(Stream.stream_id == subscribed_item.stream_id)
-                if sub_stream:
-                    subscribed_streams.append(sub_stream)
+                sub_stream = Stream.query(Stream.stream_id == subscribed_item.stream_id).fetch()
+                if len(sub_stream) != 0:
+                    subscribed_streams.append(sub_stream[0])
 
             template_values = {
                 'user': user,
@@ -155,7 +155,7 @@ class CreateStream(HTTPRequestHandler):
 
 
 
-class viewStream(HTTPRequestHandler):
+class ViewStreamHandler(HTTPRequestHandler):
     def get(self):
         user_id = self.request.get("user_id")
         curUser = users.get_current_user()
@@ -167,6 +167,20 @@ class viewStream(HTTPRequestHandler):
                 curStream = stream_lst[0]
             # create photo upload url
             upload_url = blobstore.create_upload_url('/upload_photo')
+
+            # subscription logic:
+            # if the relationship between this stream and the current user exists,
+            # then set the <subscribe_option> and <subscribe_url> fields to un-subscribe ones.
+            sub_query = Subscription.query(Subscription.user_id == user_id, Subscription.stream_id == stream_id).fetch()
+            if len(sub_query) != 0:
+                # subscription exists
+                subscribe_option = "Unsubscribe"
+                subscribe_url = "/subscribe?stream_id="+stream_id+"&subscribe_bool=false"
+            else:
+                # subscription doesn't exist
+                subscribe_option = "Subscribe"
+                subscribe_url = "/subscribe?stream_id="+stream_id+"&subscribe_bool=true"
+
             template_values = {
                 'user' : curUser,
                 'stream_id' : stream_id,
@@ -174,7 +188,9 @@ class viewStream(HTTPRequestHandler):
                 'blob_key_lst' : curStream.blob_key_lst,
                 'image_id_lst' : curStream.image_id_lst,
                 'upload_url' : upload_url,
-                'length': len(curStream.blob_key_lst)
+                'length': len(curStream.blob_key_lst),
+                'subscribe_option': subscribe_option,
+                'subscribe_url' : subscribe_url
             }
             template = JINJA_ENVIRONMENT.get_template('ViewStream.html')
             self.response.write(template.render(template_values))
@@ -284,13 +300,15 @@ class SubscriptionHandler(HTTPRequestHandler):
                 new_subscription_entry = Subscription(user_id = current_user.user_id(),
                                            stream_id = stream_id)
                 new_subscription_entry.put()
+                print 'SubscriptionHandler:: user' + current_user.user_id() + ' subscribed to stream' + stream_id
                 self.redirect('/manage')
             else:
                 # ub-subscribing request
                 # fetch the data entry of this subscription
-                subscription_entry = Subscription.query(Subscription.stream_id == stream_id).fetch()
-                if subscription_entry:
-                    subscription_entry.deleteSubscription()
+                subscription_entry = Subscription.query(Subscription.stream_id == stream_id, Subscription.user_id == current_user.user_id()).fetch()
+                if len(subscription_entry) != 0:
+                    subscription_entry[0].deleteSubscription()
+                    print 'SubscriptionHandler:: user' + current_user.user_id() + ' un-subscribed to stream' + stream_id
                     self.redirect('/manage')
                 else:
                     # no such subscription entry can be found
@@ -314,7 +332,7 @@ app = webapp2.WSGIApplication([
     , ('/create', CreatePageHandler)
     , ('/createStream', CreateStream)
     , ('/deleteStream', deleteStream)
-    , ('/viewStream', viewStream)
+    , ('/viewStream', ViewStreamHandler)
     , ('/viewAllStream', viewAllStream)
     , ('/view_photo/([^/]+)?', ViewPhotoHandler)
     , ('/upload_photo', addImg)
