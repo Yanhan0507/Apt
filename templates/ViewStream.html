@@ -44,33 +44,41 @@
 
     <div>
         <table id = "pictures">
+            <tbody>
             {% for i in range(length) %}
+                {% if i%3 == 0 %}
                 <tr>
-                    <td>
-                        <img src = "/view_photo/{{blob_key_lst[i]}}">
+                {% endif %}
+                        <td align = "center" valign="center">
+                        <img src = "/view_photo/{{blob_key_lst[i]}}" height = "200" width = "300">
                             <li align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></li>
                          </img>
 
                     </td>
-                    </tr>
+                {% if i%3 == 2 %}
+                </tr>
+                {% endif %}
             {% endfor %}
         </table>
+        </tbody>
     </div>
-
+<br>
     {% if user.user_id() == stream_owner %}
         <div>
             <form id = "photo_upload" action = "{{upload_url}}" method="POST"
-                  enctype="multipart/form-data" style="position: absolute; top: 150px" align="center">
+                  enctype="multipart/form-data" >
+            <h4> Add an Image </h4>
                 <input type = "hidden" name = "stream_id" value = "{{stream_id}}">
+                <label> File Name </label>
                 <input type="file" name="photo_file">
                 <input type="text" name = "description"/>
                 <!--<input type="file" name="photo" size="25" />-->
-                <br>
-                    <input type="submit" name="submit" value="Submit" />
+                <input type="submit" name="submit" value="Submit" />
             </form>
         </div>
     {% endif %}
 
+    <br>
     <div>
         <a href="{{ subscribe_url }}">  {{ subscribe_option }} </a>
     </div>

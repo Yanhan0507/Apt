@@ -40,22 +40,31 @@
       </div>
     </nav>
 
-    <table id="streams">
-      <tr>
-        {% for stream in streams %}
-            <td>
-              <a href="/viewStream?stream_id={{ stream['stream_id']}}&&user_id={{stream['user_id']}}">
-              {% if stream.cover_url %}
-                  <img src="{{stream.cover_url}}"  style="width:128px;height:128px;">  </img>
-                   <!--<img src="file:///Users/henry/Desktop/download.jpeg"  style="width:128px;height:128px;">  </img>-->
-              {% endif %}
-              <p><h3>{{ stream['stream_name'] }}</h3></p>
-              </a>
-            </td>
-        {% endfor %}
-      </tr>
-    </table>
+    <div>
+        <h3> View All Streams </h3>
+        <table id="streams" cellpadding="5">
 
+            {% for i in range(length) %}
+
+              {% if i % 3 == 0 %}
+                 <tr>
+              {% endif %}
+                <td align = "center" valign= "center">
+                  <a href="/viewStream?stream_id={{ streams[i].stream_id}}&&user_id={{streams[i].user_id}}">
+                      {% if streams[i].cover_url %}
+                          <img src="{{streams[i].cover_url}}"  style="width:300px;height:200px;">  </img>
+                           <!--<img src="file:///Users/henry/Desktop/download.jpeg"  style="width:128px;height:128px;">  </img>-->
+                      {% endif %}
+                      <h4>{{ streams[i].stream_name }}</h4>
+                  </a>
+                </td>
+            {%if i % 3 == 2%}
+                 </tr>
+              {% endif %}
+            {% endfor %}
+
+        </table>
+    </div>
 
 
 </body>

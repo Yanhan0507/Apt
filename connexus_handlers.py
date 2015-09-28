@@ -279,6 +279,7 @@ class viewAllStream(HTTPRequestHandler):
         logout_linktext = 'Logout'
         template_values = {
             'streams' : stream_lst,
+            'length': len(stream_lst),
             'user' : users.get_current_user(),
             'url': logout_url,
             'url_linktext': logout_linktext,
