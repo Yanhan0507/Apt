@@ -107,6 +107,7 @@ class ManagePageHandler(HTTPRequestHandler):
                 sub_stream = Stream.query(Stream.stream_id == subscribed_item.stream_id).fetch()
                 if len(sub_stream) != 0:
                     subscribed_streams.append(sub_stream[0])
+
             sorted_streams = sorted(streams,key=lambda  stream: stream.last_add, reverse = True )
             template_values = {
                 'user': user,
@@ -398,7 +399,7 @@ class SearchRequestHandler(HTTPRequestHandler):
         logout_url = users.create_login_url(self.request.uri)
         logout_linktext = 'Logout'
 
-        sorted_streams = sorted(stream_lst,key=lambda  stream: stream.last_add, reverse = True )
+        sorted_streams = sorted(return_lst,key=lambda  stream: stream.last_add, reverse = True )
 
 
         template_values = {
