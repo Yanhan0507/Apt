@@ -291,7 +291,7 @@ class viewAllStream(HTTPRequestHandler):
 
         logout_url = users.create_login_url(self.request.uri)
         logout_linktext = 'Logout'
-        
+
         sorted_streams = sorted(stream_lst,key=lambda  stream: stream.last_add, reverse = True )
 
         template_values = {
@@ -391,9 +391,13 @@ class SearchRequestHandler(HTTPRequestHandler):
 
         logout_url = users.create_login_url(self.request.uri)
         logout_linktext = 'Logout'
+
+        sorted_streams = sorted(stream_lst,key=lambda  stream: stream.last_add, reverse = True )
+
+
         template_values = {
-            'streams' : return_lst,
-            'length': len(return_lst),
+            'streams' :  sorted_streams,
+            'length': len(  sorted_streams),
             'user' : users.get_current_user(),
             'url': logout_url,
             'url_linktext': logout_linktext,
