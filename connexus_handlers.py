@@ -415,7 +415,7 @@ class SearchRequestHandler(HTTPRequestHandler):
 # rewind the view counts
 class ResetTrendingViewCnts(HTTPRequestHandler):
     def get(self):
-        all_streams_lst = Stream.all()
+        all_streams_lst = Stream.query().fetch()
         print 'Cron job executing ... cleaning the view counts for ', len(all_streams_lst), ' streams.'
         for stream in all_streams_lst:
             stream.reset_view_cnt()
@@ -510,6 +510,6 @@ app = webapp2.WSGIApplication([
     , ('/trending', TrendingPageHandler)
     , ('/search', SearchHandler)
     , ('/search/result', SearchRequestHandler)
-    , ('/cron/resetViewsCnt', ResetTrendingViewCnts)
+    , ('/cron/reset_views_cnt', ResetTrendingViewCnts)
     , ('/updateReportSendingRate', UpdateReportSendingRate)]
     , debug=True)
