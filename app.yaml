@@ -1,4 +1,4 @@
-application: ee382v-apt-miniproject
+application: ee382v-apt-connexus
 version: 1
 runtime: python27
 api_version: 1

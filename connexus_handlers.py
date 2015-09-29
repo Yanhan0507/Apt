@@ -1,6 +1,6 @@
 from google.appengine.api import users
 from google.appengine.ext import ndb
-from Model import Image, Stream, Subscription
+from Model import Image, Stream, Subscription, ReportSendingRate
 import uuid
 
 
@@ -10,6 +10,7 @@ import os
 import urllib
 import json
 from google.appengine.api import urlfetch
+from datetime import datetime
 # self defined classes
 
 import webapp2
@@ -18,13 +19,19 @@ from google.appengine.api import users
 from google.appengine.ext import blobstore
 from google.appengine.ext import ndb
 from google.appengine.ext.webapp import blobstore_handlers
-from google.appengine.ext.webapp.util import run_wsgi_app
+from google.appengine.api import mail
 
 
 
 
 # SERVICES_URL = 'http://localhost:8080' #local
-SERVICE_URL = 'http://ee382v-apt-miniproject.appspot.com/'
+SERVICE_URL = 'http://ee382v-apt-connexus.appspot.com/'
+APP_ID = 'ee382v-apt-connexus'
+
+# Email addresses list
+report_email_list = ["ee461lta@gmail.com"]
+DEFAULT_SENDING_RATE = 2    # 1 hour
+global_last_report_time = None
 
 # HTML_TEMPLATES FOLDER
 JINJA_ENVIRONMENT = jinja2.Environment(
@@ -108,8 +115,7 @@ class ManagePageHandler(HTTPRequestHandler):
                 'user_streams': streams,
                 'subscribed_streams':subscribed_streams
             }
-            template = JINJA_ENVIRONMENT.get_template('management.html')
-            self.response.write(template.render(template_values))
+            self.render('Management.html', **template_values)
         else:
             self.redirect('/login')
 
@@ -158,11 +164,11 @@ class CreateStream(HTTPRequestHandler):
 
 class ViewStreamHandler(HTTPRequestHandler):
     def get(self):
-        user_id = self.request.get("user_id")
+        # user_id = self.request.get("user_id")
         curUser = users.get_current_user()
-        if user_id:
+        if curUser:
             stream_id = self.request.get("stream_id")
-            stream_lst = Stream.query(Stream.user_id == user_id, Stream.stream_id == stream_id).fetch()
+            stream_lst = Stream.query(Stream.user_id == curUser.user_id(), Stream.stream_id == stream_id).fetch()
             curStream = []
             if len(stream_lst) >= 0:
                 curStream = stream_lst[0]
@@ -172,7 +178,7 @@ class ViewStreamHandler(HTTPRequestHandler):
             # subscription logic:
             # if the relationship between this stream and the current user exists,
             # then set the <subscribe_option> and <subscribe_url> fields to un-subscribe ones.
-            sub_query = Subscription.query(Subscription.user_id == user_id, Subscription.stream_id == stream_id).fetch()
+            sub_query = Subscription.query(Subscription.user_id == curUser.user_id(), Subscription.stream_id == stream_id).fetch()
             if len(sub_query) != 0:
                 # subscription exists
                 subscribe_option = "Unsubscribe"
@@ -391,11 +397,87 @@ class SearchRequestHandler(HTTPRequestHandler):
         }
         self.render('ViewAllStream.html', **template_values)
 
+# cron job getting called every hour
+# rewind the view counts
 class ResetTrendingViewCnts(HTTPRequestHandler):
     def get(self):
         all_streams_lst = Stream.all()
+        print 'Cron job executing ... cleaning the view counts for ', len(all_streams_lst), ' streams.'
         for stream in all_streams_lst:
             stream.reset_view_cnt()
+
+# This handler catches the event of updating the sending rate
+class UpdateReportSendingRate(HTTPRequestHandler):
+    def get(self):
+        upd_send_rate = self.request.get("sending_rate")
+        print '[UpdateReportSendingRate]:: get sending_rate update: ', upd_send_rate
+
+        reportRate = ReportSendingRate.query().fetch()
+        if len(reportRate) != 0:
+            ori_send_rate = reportRate[0].sending_rate
+            reportRate[0].update_sending_rate(int(upd_send_rate))
+            print '[UpdateReportSendingRate]:: change sending rate from ', ori_send_rate, ' to ', upd_send_rate
+        else:
+            print "[UpdateReportSendingRate]:: cannot find the sending rate configuration. Setting the sending rate " \
+                  "to 1 hour"
+            dft_send_rate = ReportSendingRate(user_email = report_email_list[0],
+                                              sending_rate = DEFAULT_SENDING_RATE)
+            dft_send_rate.put()
+
+        self.redirect('/trending')
+
+# This is the actual cron job which sends the email report to the user.
+class SendReportCronJob(HTTPRequestHandler):
+    def get(self):
+        # get the last report time
+        global global_last_report_time
+        if not global_last_report_time:
+            global_last_report_time = datetime.now()
+            return
+
+        # get the sending rate
+        reportRate = ReportSendingRate.query().fetch()
+        if len(reportRate) != 0:
+             reportRate = reportRate[0].sending_rate
+        interval_in_mins = -99
+        if reportRate == 0:
+            # No reports. Return
+            return
+        elif reportRate == 1:
+            interval_in_mins = 5
+        elif reportRate == 2:
+            interval_in_mins = 60
+        elif reportRate == 3:
+            interval_in_mins = 1440     # one day
+        else:
+            print 'Error in report rate : ', reportRate
+
+        # comparing the sending rate with the time interval since the last report
+        time_passed = (datetime.now() - global_last_report_time).seconds
+        if time_passed < int(interval_in_mins)*60:
+            return
+
+        # send the report mail
+        global_last_report_time = datetime.now()
+        trending_stream_lst = Stream.query().order(-Stream.views_cnt).fetch(3)
+
+        sender_mail_addr = "trendingStreams@"+APP_ID+".appspotmail.com"
+        subject = "Trending Streams from Connexus " + global_last_report_time
+        body = """ Here are the trending streams on Connexus now: \n
+        1) %s - %s  \n
+        2) %s - %s  \n
+        3) %s - %s  \n
+        """ % (trending_stream_lst[0].stream_name,
+               trending_stream_lst[0].user_id,
+               trending_stream_lst[1].stream_name,
+               trending_stream_lst[1].user_id,
+               trending_stream_lst[2].stream_name,
+               trending_stream_lst[2].user_id)
+
+        for receiver_addr in report_email_list:
+            mail.send_mail(sender_mail_addr, receiver_addr, subject, body)
+
+        print "Successfully sent the trending email to " + report_email_list
 
 app = webapp2.WSGIApplication([
     ('/', LoginHandler)
@@ -414,5 +496,6 @@ app = webapp2.WSGIApplication([
     , ('/trending', TrendingPageHandler)
     , ('/search', SearchHandler)
     , ('/search/result', SearchRequestHandler)
-    , ('/cron/resetViewsCnt', ResetTrendingViewCnts)]
+    , ('/cron/resetViewsCnt', ResetTrendingViewCnts)
+    , ('/updateReportSendingRate', UpdateReportSendingRate)]
     , debug=True)

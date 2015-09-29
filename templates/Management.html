@@ -80,11 +80,11 @@
                 <th>Last New Picture</th>
                 <th>Number of Pictures</th>
                 <th>Views</th>
+                <th>TotalViews</th>
                 <th>Unsubscribe</th>
             </tr>
 
             {% for sub_stream in subscribed_streams %}
-            <tr>
                 <td width="30%">
                     <!--name column-->
                     <a href="/viewStream?stream_id={{ sub_stream['stream_id'] }}">{{ sub_stream['stream_name'] }}</a>
@@ -93,7 +93,7 @@
                     <!--Last New Picture column-->
                     {{ sub_stream['last_add'] }}
                 </td>
-                <td width="20%">
+                <td width="15%">
                     <!--Nrof_pics column-->
                     {{ sub_stream['image_id_lst']|length }}
                 </td>
@@ -101,7 +101,11 @@
                     <!--Views column-->
                     {{ sub_stream['views_cnt'] }}
                 </td>
-                <td width="20%">
+                <td width="10%">
+                    <!--Total Views column-->
+                    {{ sub_stream['total_views_cnt'] }}
+                </td>
+                <td width="15%">
                     <!--Unsubscribe column-->
                     <a href="/subscribe?subscribe_bool=false&stream_id={{ sub_stream['stream_id'] }}"> Unsubscribe</a>
                 </td>

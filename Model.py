@@ -77,3 +77,10 @@ class Subscription(ndb.Model):
         key.delete()
 
 
+class ReportSendingRate(ndb.Model):
+    user_email = ndb.StringProperty()
+    sending_rate = ndb.IntegerProperty()
+
+    def update_sending_rate(self, update_rate):
+        self.sending_rate = update_rate
+        self.put()
