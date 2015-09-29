@@ -339,7 +339,57 @@ class TrendingPageHandler(HTTPRequestHandler):
         }
         self.render('Trending.html', **template_values)
 
+class SearchHandler(HTTPRequestHandler):
+    def get(self):
+        user_id = users.get_current_user().user_id()
 
+        stream_lst = Stream.query().fetch()
+
+        logout_url = users.create_login_url(self.request.uri)
+        logout_linktext = 'Logout'
+        template_values = {
+            'streams' : stream_lst,
+            'length': len(stream_lst),
+            'user' : users.get_current_user(),
+            'url': logout_url,
+            'url_linktext': logout_linktext,
+        }
+        self.render('ViewAllStream.html', **template_values)
+
+class SearchHandler(HTTPRequestHandler):
+    def get(self):
+        user_id = users.get_current_user().user_id()
+        logout_url = users.create_login_url(self.request.uri)
+        logout_linktext = 'Logout'
+        template_values = {
+            'user' : users.get_current_user(),
+            'url': logout_url,
+            'url_linktext': logout_linktext,
+        }
+        self.render('Search.html', **template_values)
+
+
+class SearchRequestHandler(HTTPRequestHandler):
+    def post(self):
+        user_id = users.get_current_user().user_id()
+        keyWord = self.request.get("keyWord")
+        searchItem = keyWord.lower()
+        stream_lst = Stream.query().fetch()
+        return_lst = []
+        for stream in stream_lst:
+            if searchItem in stream.stream_name.lower():
+                return_lst.append(stream)
+
+        logout_url = users.create_login_url(self.request.uri)
+        logout_linktext = 'Logout'
+        template_values = {
+            'streams' : return_lst,
+            'length': len(return_lst),
+            'user' : users.get_current_user(),
+            'url': logout_url,
+            'url_linktext': logout_linktext,
+        }
+        self.render('ViewAllStream.html', **template_values)
 
 app = webapp2.WSGIApplication([
     ('/', LoginHandler)
@@ -355,5 +405,7 @@ app = webapp2.WSGIApplication([
     , ('/stream/delete', deleteImg)
     , ('/deleteStream/all', deleteStreamAll)
     , ('/subscribe', SubscriptionHandler)
-    , ('/trending', TrendingPageHandler)]
+    , ('/trending', TrendingPageHandler)
+    , ('/search', SearchHandler)
+    , ('/search/result', SearchRequestHandler)]
     , debug=True)
