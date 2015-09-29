@@ -193,7 +193,9 @@ class ViewStreamHandler(HTTPRequestHandler):
                 'upload_url' : upload_url,
                 'length': len(curStream.blob_key_lst),
                 'subscribe_option': subscribe_option,
-                'subscribe_url' : subscribe_url
+                'subscribe_url' : subscribe_url,
+                'stream_name': curStream.stream_name,
+                'description': curStream.description
             }
 
             # increase the views_cnt
