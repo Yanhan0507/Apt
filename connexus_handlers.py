@@ -184,6 +184,9 @@ class ViewStreamHandler(HTTPRequestHandler):
                 subscribe_option = "Subscribe"
                 subscribe_url = "/subscribe?stream_id="+stream_id+"&subscribe_bool=true"
 
+            description = "The owner didn't leave any description."
+            if curStream.description:
+                description = curStream.description
             template_values = {
                 'user' : curUser,
                 'stream_id' : stream_id,
@@ -195,7 +198,7 @@ class ViewStreamHandler(HTTPRequestHandler):
                 'subscribe_option': subscribe_option,
                 'subscribe_url' : subscribe_url,
                 'stream_name': curStream.stream_name,
-                'description': curStream.description
+                'description': description
             }
 
             # increase the views_cnt
