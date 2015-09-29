@@ -52,8 +52,13 @@ class Stream(ndb.Model):
         if self.total_views_cnt is None:
             self.total_views_cnt = 0
         self.views_cnt += 1
-        self.total_views_cnt +=1
+        self.total_views_cnt += 1
         self.put()
+
+    def reset_view_cnt(self):
+        self.views_cnt = 0
+        self.put()
+
 
 # Subscription Data Model:
 #   Each object indicates a subscription relationship between a user and a stream

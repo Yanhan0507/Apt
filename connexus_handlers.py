@@ -391,6 +391,12 @@ class SearchRequestHandler(HTTPRequestHandler):
         }
         self.render('ViewAllStream.html', **template_values)
 
+class ResetTrendingViewCnts(HTTPRequestHandler):
+    def get(self):
+        all_streams_lst = Stream.all()
+        for stream in all_streams_lst:
+            stream.reset_view_cnt()
+
 app = webapp2.WSGIApplication([
     ('/', LoginHandler)
     , ('/login', LoginHandler)
@@ -407,5 +413,6 @@ app = webapp2.WSGIApplication([
     , ('/subscribe', SubscriptionHandler)
     , ('/trending', TrendingPageHandler)
     , ('/search', SearchHandler)
-    , ('/search/result', SearchRequestHandler)]
+    , ('/search/result', SearchRequestHandler)
+    , ('/cron/resetViewsCnt', ResetTrendingViewCnts)]
     , debug=True)

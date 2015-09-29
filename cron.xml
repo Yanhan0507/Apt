@@ -1,0 +1,4 @@
+cron:
+- description: reset the views_cnt every hour
+  url: /cron/reset_views_cnt
+  schedule: every 1 hours
