@@ -16,7 +16,7 @@
         <div class="navbar-header">
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
           </button>
-          <a class="navbar-brand" href="#">Connexus</a>
+          <a class="navbar-brand" href="/">Connexus</a>
           <ul class="nav navbar-nav">
             <!--<li class="active"><a href="#">Home</a></li>-->
                 <li class="active"><a href="/manage">Manage</a></li>
@@ -45,31 +45,29 @@
           <tr>
             <th>Name</th>
             <th>Last New Picture</th>
-            <th>Views</th>
+            <th>Number of Pictures</th>
             <th> <a href = "/deleteStream/all"> Delete </a> </th>
           </tr>
 
-          {% for row in user_streams%}
+          {% for ustream in user_streams%}
             <tr>
               <td width="25%">
-                <a href="/viewStream?stream_id={{row['stream_id']}}&user_id={{row['user_id']}}">{{ row['stream_name'] }}</a>
+                <a href="/viewStream?stream_id={{ustream['stream_id']}}&user_id={{ustream['user_id']}}">{{ ustream['stream_name'] }}</a>
               </td>
               <td width="25%">
-                {% if row['last_add'] %}
-                    {{ row['last_add'] }}
+                {% if ustream['last_add'] %}
+                    {{ ustream['last_add'] }}
                 {% else %}
                     -
                 {% endif %}
               </td>
+
               <td width="25%">
-                    {% if row['last_add'] %}
-                        {{ row['views']}}
-                    {% else %}
-                        -
-                    {% endif %}
+                  <!--Nrof of Pics column-->
+                {{ ustream['image_id_lst']|length }}
               </td>
               <td width="25%">
-                <a href="/deleteStream?stream_id={{row['stream_id'] }}"> delete </a>
+                <a href="/deleteStream?stream_id={{ustream['stream_id'] }}"> delete </a>
               </td>
             </tr>
           {% endfor %}
@@ -97,11 +95,11 @@
                 </td>
                 <td width="20%">
                     <!--Nrof_pics column-->
-                    <!--TODO-->
+                    {{ sub_stream['image_id_lst']|length }}
                 </td>
                 <td width="10%">
                     <!--Views column-->
-                    <!--TODO-->
+                    {{ sub_stream['views_cnt'] }}
                 </td>
                 <td width="20%">
                     <!--Unsubscribe column-->

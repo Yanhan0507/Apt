@@ -14,6 +14,7 @@ class Stream(ndb.Model):
     stream_name = ndb.StringProperty()
     stream_id = ndb.StringProperty()
     cover_url = ndb.StringProperty()
+    views_cnt = ndb.IntegerProperty()   # added on 0929 for trends
     image_id_lst = ndb.StringProperty(repeated=True)
     blob_key_lst = ndb.BlobKeyProperty(repeated=True)
     viewsRecording = ndb.DateTimeProperty(repeated=True)
@@ -43,6 +44,10 @@ class Stream(ndb.Model):
     def deleteStream(self):
         key = self.put()
         key.delete()
+
+    def increase_view_cnt(self):
+        self.views_cnt += 1
+        self.put()
 
 # Subscription Data Model:
 #   Each object indicates a subscription relationship between a user and a stream

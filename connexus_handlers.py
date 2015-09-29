@@ -145,7 +145,8 @@ class CreateStream(HTTPRequestHandler):
                             ,stream_id = str(stream_id)
                             ,stream_name = stream_name
                             ,last_add = None
-                            ,cover_url = cover_url)
+                            ,cover_url = cover_url
+                            ,views_cnt = 0)
 
 
 
@@ -192,6 +193,10 @@ class ViewStreamHandler(HTTPRequestHandler):
                 'subscribe_option': subscribe_option,
                 'subscribe_url' : subscribe_url
             }
+
+            # increase the views_cnt
+            curStream.increase_view_cnt()
+
             template = JINJA_ENVIRONMENT.get_template('ViewStream.html')
             self.response.write(template.render(template_values))
         else:
@@ -271,9 +276,7 @@ class viewAllStream(HTTPRequestHandler):
     def get(self):
         user_id = users.get_current_user().user_id()
 
-
         stream_lst = Stream.query().fetch()
-
 
         logout_url = users.create_login_url(self.request.uri)
         logout_linktext = 'Logout'
@@ -323,6 +326,18 @@ class SubscriptionHandler(HTTPRequestHandler):
                 'error_msg' : "no user can be found in the session"
             }
             self.render("Error.html", **template_values)
+
+
+# Trending Page handler:
+#
+class TrendingPageHandler(HTTPRequestHandler):
+    def get(self):
+        trending_stream_lst = Stream.query().order(-Stream.views_cnt).fetch(3)
+
+        template_values = {
+            'trending_stream_lst' : trending_stream_lst,
+        }
+        self.render('Trending.html', **template_values)
 
 
 
