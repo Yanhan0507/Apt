@@ -100,12 +100,12 @@ class ManagePageHandler(HTTPRequestHandler):
                 sub_stream = Stream.query(Stream.stream_id == subscribed_item.stream_id).fetch()
                 if len(sub_stream) != 0:
                     subscribed_streams.append(sub_stream[0])
-
+            sorted_streams = sorted(streams,key=lambda  stream: stream.last_add, reverse = True )
             template_values = {
                 'user': user,
                 'url': logout_url,
                 'url_linktext': logout_linktext,
-                'user_streams': streams,
+                'user_streams': sorted_streams,
                 'subscribed_streams':subscribed_streams
             }
             template = JINJA_ENVIRONMENT.get_template('management.html')
@@ -291,9 +291,12 @@ class viewAllStream(HTTPRequestHandler):
 
         logout_url = users.create_login_url(self.request.uri)
         logout_linktext = 'Logout'
+        
+        sorted_streams = sorted(stream_lst,key=lambda  stream: stream.last_add, reverse = True )
+
         template_values = {
-            'streams' : stream_lst,
-            'length': len(stream_lst),
+            'streams' : sorted_streams,
+            'length': len(sorted_streams),
             'user' : users.get_current_user(),
             'url': logout_url,
             'url_linktext': logout_linktext,
