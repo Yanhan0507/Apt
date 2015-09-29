@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+      <!-- Custom styles for this template -->
+    <link href="/css/jumbotron.css" rel="stylesheet">
+
+</head>
+<body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          </button>
+          <a class="navbar-brand" href="/">Connexus</a>
+          <ul class="nav navbar-nav">
+            <!--<li class="active"><a href="#">Home</a></li>-->
+                <li><a href="/manage">Manage</a></li>
+                <li><a href="/create">Create</a></li>
+                <li><a href="/viewAllStream">ViewAll</a></li>
+                <li><a href="/search">Search</a></li>
+                <li class="active"><a href="/trending">Trending</a></li>
+          </ul>
+        </div>
+
+
+        <!--<div id="navbar" class="navbar-collapse navbar-right">-->
+            <!--{% if user  %}-->
+            <!--<p class="navbar-text">Signed in as {{ user.nickname() }}</p>-->
+            <!--&lt;!&ndash;<a href="{{ url|safe }}" class="btn btn-default navbar-btn">{{ url_linktext }}</a>&ndash;&gt;-->
+            <!--{% else %}-->
+            <!--<a href="{{ url|safe }}" class="btn btn-default navbar-btn">{{ url_linktext }}</a>-->
+            <!--{% endif %}-->
+        <!--</div>-->
+      </div>
+    </nav>
+
+    <div>
+        <h3> Top 3 Trending Streams </h3>
+        <table id="Trending streams" cellpadding="5">
+            <tr>
+                {% for stream in trending_stream_lst %}
+                <td align = "center" valign= "center">
+                  <a href="/viewStream?stream_id={{ stream.stream_id }}">
+                      {% if stream.cover_url %}
+                          <img src="{{stream.cover_url}}"  style="width:300px;height:200px;">  </img>
+                      {% endif %}
+                      <h4>{{ stream.stream_name }}</h4>
+                  </a>
+                </td>
+                {% endfor %}
+            </tr>
+
+
+        </table>
+    </div>
+
+
+</body>
+</html>
