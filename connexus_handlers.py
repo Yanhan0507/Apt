@@ -107,12 +107,12 @@ class ManagePageHandler(HTTPRequestHandler):
                 sub_stream = Stream.query(Stream.stream_id == subscribed_item.stream_id).fetch()
                 if len(sub_stream) != 0:
                     subscribed_streams.append(sub_stream[0])
-
+            sorted_streams = sorted(streams,key=lambda  stream: stream.last_add, reverse = True )
             template_values = {
                 'user': user,
                 'url': logout_url,
                 'url_linktext': logout_linktext,
-                'user_streams': streams,
+                'user_streams': sorted_streams,
                 'subscribed_streams':subscribed_streams
             }
             self.render('Management.html', **template_values)
@@ -145,6 +145,7 @@ class CreateStream(HTTPRequestHandler):
         stream_name = self.request.get("streamName")
         stream_id = uuid.uuid4()
         cover_url = self.request.get("cover_url")
+        content = self.request.get("content")
 
         new_stream = Stream(parent = ndb.Key('Account', user_id)
                             ,user_id = user_id
@@ -152,7 +153,8 @@ class CreateStream(HTTPRequestHandler):
                             ,stream_name = stream_name
                             ,last_add = None
                             ,cover_url = cover_url
-                            ,views_cnt = 0)
+                            ,views_cnt = 0
+                            ,description = content)
 
 
 
@@ -188,6 +190,9 @@ class ViewStreamHandler(HTTPRequestHandler):
                 subscribe_option = "Subscribe"
                 subscribe_url = "/subscribe?stream_id="+stream_id+"&subscribe_bool=true"
 
+            description = "The owner didn't leave any description."
+            if curStream.description:
+                description = curStream.description
             template_values = {
                 'user' : curUser,
                 'stream_id' : stream_id,
@@ -197,7 +202,9 @@ class ViewStreamHandler(HTTPRequestHandler):
                 'upload_url' : upload_url,
                 'length': len(curStream.blob_key_lst),
                 'subscribe_option': subscribe_option,
-                'subscribe_url' : subscribe_url
+                'subscribe_url' : subscribe_url,
+                'stream_name': curStream.stream_name,
+                'description': description
             }
 
             # increase the views_cnt
@@ -221,6 +228,7 @@ class addImg(blobstore_handlers.BlobstoreUploadHandler):
         #get the blob store object
         upload = self.get_uploads()[0]
         img_id = uuid.uuid4()
+        print "addImg: blob_key: " + str(upload.key())
         user_photo = Image(user_id = users.get_current_user().user_id(),
                            img_id = str(img_id),
                            content = description,
@@ -253,9 +261,12 @@ class deleteImg(HTTPRequestHandler):
 
 class ViewPhotoHandler(blobstore_handlers.BlobstoreDownloadHandler):
     def get(self, photo_key):
+        print "key in handle: " + photo_key
         if not blobstore.get(photo_key):
+            print "no photo-key"
             self.error(404)
         else:
+            print "photo_key: " + str(photo_key)
             self.send_blob(photo_key)
 
 class deleteStream(HTTPRequestHandler):
@@ -286,9 +297,12 @@ class viewAllStream(HTTPRequestHandler):
 
         logout_url = users.create_login_url(self.request.uri)
         logout_linktext = 'Logout'
+
+        sorted_streams = sorted(stream_lst,key=lambda  stream: stream.last_add, reverse = True )
+
         template_values = {
-            'streams' : stream_lst,
-            'length': len(stream_lst),
+            'streams' : sorted_streams,
+            'length': len(sorted_streams),
             'user' : users.get_current_user(),
             'url': logout_url,
             'url_linktext': logout_linktext,
@@ -345,22 +359,7 @@ class TrendingPageHandler(HTTPRequestHandler):
         }
         self.render('Trending.html', **template_values)
 
-class SearchHandler(HTTPRequestHandler):
-    def get(self):
-        user_id = users.get_current_user().user_id()
 
-        stream_lst = Stream.query().fetch()
-
-        logout_url = users.create_login_url(self.request.uri)
-        logout_linktext = 'Logout'
-        template_values = {
-            'streams' : stream_lst,
-            'length': len(stream_lst),
-            'user' : users.get_current_user(),
-            'url': logout_url,
-            'url_linktext': logout_linktext,
-        }
-        self.render('ViewAllStream.html', **template_values)
 
 class SearchHandler(HTTPRequestHandler):
     def get(self):
@@ -377,20 +376,34 @@ class SearchHandler(HTTPRequestHandler):
 
 class SearchRequestHandler(HTTPRequestHandler):
     def post(self):
+        type = self.request.get("type")
         user_id = users.get_current_user().user_id()
         keyWord = self.request.get("keyWord")
         searchItem = keyWord.lower()
         stream_lst = Stream.query().fetch()
         return_lst = []
-        for stream in stream_lst:
-            if searchItem in stream.stream_name.lower():
-                return_lst.append(stream)
+
+        if type == "title":
+            for stream in stream_lst:
+                if stream.stream_name != None:
+                    if searchItem in stream.stream_name.lower():
+                        return_lst.append(stream)
+        else:
+            for stream in stream_lst:
+                if  stream.description != None:
+                    if searchItem in stream.description.lower():
+                        return_lst.append(stream)
+
 
         logout_url = users.create_login_url(self.request.uri)
         logout_linktext = 'Logout'
+
+        sorted_streams = sorted(stream_lst,key=lambda  stream: stream.last_add, reverse = True )
+
+
         template_values = {
-            'streams' : return_lst,
-            'length': len(return_lst),
+            'streams' :  sorted_streams,
+            'length': len(  sorted_streams),
             'user' : users.get_current_user(),
             'url': logout_url,
             'url_linktext': logout_linktext,

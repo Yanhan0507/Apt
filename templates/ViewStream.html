@@ -42,6 +42,13 @@
       </div>
     </nav>
 
+    <br>
+    <br>
+    <br>
+    <div>
+        <h2> Welcome to {{stream_name}} </h2>
+        <p4> Description: {{description}}</p4>
+    </div>
     <div>
         <table id = "pictures">
             <tbody>
@@ -51,7 +58,9 @@
                 {% endif %}
                         <td align = "center" valign="center">
                         <img src = "/view_photo/{{blob_key_lst[i]}}" height = "200" width = "300">
-                            <li align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></li>
+                            {% if user.user_id() == stream_owner %}
+                                <li align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></li>
+                            {% endif %}
                          </img>
 
                     </td>
