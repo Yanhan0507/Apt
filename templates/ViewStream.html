@@ -51,7 +51,9 @@
                 {% endif %}
                         <td align = "center" valign="center">
                         <img src = "/view_photo/{{blob_key_lst[i]}}" height = "200" width = "300">
-                            <li align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></li>
+                            {% if user.user_id() == stream_owner %}
+                                <li align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></li>
+                            {% endif %}
                          </img>
 
                     </td>
