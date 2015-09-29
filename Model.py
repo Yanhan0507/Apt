@@ -14,7 +14,8 @@ class Stream(ndb.Model):
     stream_name = ndb.StringProperty()
     stream_id = ndb.StringProperty()
     cover_url = ndb.StringProperty()
-    views_cnt = ndb.IntegerProperty()   # added on 0929 for trends
+    views_cnt = ndb.IntegerProperty()   # added on 0929 for trends; this will get reset every hour
+    total_views_cnt = ndb.IntegerProperty()     # added on 0929 for counting the views in total
     image_id_lst = ndb.StringProperty(repeated=True)
     blob_key_lst = ndb.BlobKeyProperty(repeated=True)
     viewsRecording = ndb.DateTimeProperty(repeated=True)
@@ -46,7 +47,12 @@ class Stream(ndb.Model):
         key.delete()
 
     def increase_view_cnt(self):
+        if self.views_cnt is None:
+            self.views_cnt = 0
+        if self.total_views_cnt is None:
+            self.total_views_cnt = 0
         self.views_cnt += 1
+        self.total_views_cnt +=1
         self.put()
 
 # Subscription Data Model:

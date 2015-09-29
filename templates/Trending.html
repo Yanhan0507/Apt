@@ -50,6 +50,7 @@
                           <img src="{{stream.cover_url}}"  style="width:300px;height:200px;">  </img>
                       {% endif %}
                       <h4>{{ stream.stream_name }}</h4>
+                      <h5> Views in the past hour: {{ stream.views_cnt}} (total:{{ stream.total_views_cnt}})</h5>
                   </a>
                 </td>
                 {% endfor %}
