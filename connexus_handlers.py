@@ -335,7 +335,7 @@ class TrendingPageHandler(HTTPRequestHandler):
         trending_stream_lst = Stream.query().order(-Stream.views_cnt).fetch(3)
 
         template_values = {
-            'trending_stream_lst' : trending_stream_lst,
+            'trending_stream_lst': trending_stream_lst
         }
         self.render('Trending.html', **template_values)
 
@@ -354,5 +354,6 @@ app = webapp2.WSGIApplication([
     , ('/upload_photo', addImg)
     , ('/stream/delete', deleteImg)
     , ('/deleteStream/all', deleteStreamAll)
-    , ('/subscribe', SubscriptionHandler)]
+    , ('/subscribe', SubscriptionHandler)
+    , ('/trending', TrendingPageHandler)]
     , debug=True)
