@@ -145,7 +145,7 @@ class CreateStream(HTTPRequestHandler):
                             ,user_id = user_id
                             ,stream_id = str(stream_id)
                             ,stream_name = stream_name
-                            ,last_add = None
+                            # ,last_add = None
                             ,cover_url = cover_url
                             ,views_cnt = 0
                             ,description = content)
