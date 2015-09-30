@@ -27,20 +27,22 @@ class Stream(ndb.Model):
             return
         image.put()
         self.blob_key_lst.insert(0, image.blob_key)
+        # print "[Stream]addImage:: adding image (blob_key=", image.blob_key, ")"
+        # print "[Stream]addImage:: new self.blob_ket_lst: ", self.blob_key_lst
         self.last_add = image.date
         self.image_id_lst.insert(0, image.img_id)
         self.put()
 
     def deleteImage(self, image):
         if str(image.img_id) in self.image_id_lst:
-            print "size of blobkey before: " + str(len(self.image_id_lst))
+            # print "size of blobkey before: " + str(len(self.image_id_lst))
             self.image_id_lst.remove(image.img_id)
             self.blob_key_lst.remove(image.blob_key)
-            print "size of blobkey after: " + str(len(self.image_id_lst))
+            # print "size of blobkey after: " + str(len(self.image_id_lst))
             key = image.put()
-            print "get1: " + str(key.get())
+            # print "get1: " + str(key.get())
             key.delete()
-            print "get2: " + str(key.get())
+            # print "get2: " + str(key.get())
             self.put()
 
     def deleteStream(self):

@@ -152,12 +152,10 @@ class CreateStream(HTTPRequestHandler):
                             ,user_id = user_id
                             ,stream_id = str(stream_id)
                             ,stream_name = stream_name
-                            # ,last_add = None
-                            ,cover_url = cover_url
                             ,views_cnt = 0
+                            ,total_views_cnt = 0
+                            ,cover_url = cover_url
                             ,description = content)
-
-
 
         new_stream.put()
 
@@ -170,9 +168,13 @@ class ViewStreamHandler(HTTPRequestHandler):
         if curUser:
             stream_id = self.request.get("stream_id")
             stream_lst = Stream.query(Stream.stream_id == stream_id).fetch()
+
             curStream = []
             if len(stream_lst) >= 0:
                 curStream = stream_lst[0]
+                str_blob_key_lst = []
+                for b_key in stream_lst[0].blob_key_lst:
+                    str_blob_key_lst.append(b_key)
             # create photo upload url
             upload_url = blobstore.create_upload_url('/upload_photo')
 
@@ -192,11 +194,12 @@ class ViewStreamHandler(HTTPRequestHandler):
             description = "The owner didn't leave any description."
             if curStream.description:
                 description = curStream.description
+
             template_values = {
                 'user' : curUser,
                 'stream_id' : stream_id,
                 'stream_owner': curStream.user_id,
-                'blob_key_lst' : curStream.blob_key_lst,
+                'blob_key_lst' : str_blob_key_lst,
                 'image_id_lst' : curStream.image_id_lst,
                 'upload_url' : upload_url,
                 # 'length': len(curStream.blob_key_lst),
@@ -209,7 +212,8 @@ class ViewStreamHandler(HTTPRequestHandler):
             # increase the views_cnt
             curStream.increase_view_cnt()
 
-            self.render('ViewStream.html', **template_values)
+            template = JINJA_ENVIRONMENT.get_template('ViewStream.html')
+            self.response.write(template.render(template_values))
         else:
             self.redirect('/login')
 
@@ -237,6 +241,7 @@ class addImg(blobstore_handlers.BlobstoreUploadHandler):
         if curStream:
             print "addImg>> stream id:", stream_id, ", list length: ", len(stream_lst)
             curStream.addImage(user_photo)
+            print "addImg>> blob_key_lst after adding: ", curStream.blob_key_lst
         else:
             print "Fail to add user photo ", user_photo, "to stream ", stream_id
 
@@ -259,8 +264,8 @@ class deleteImg(HTTPRequestHandler):
 
 class ViewPhotoHandler(blobstore_handlers.BlobstoreDownloadHandler):
     def get(self, photo_key):
-        print "key in handle: " + photo_key
-        if not blobstore.get(str(photo_key)):
+        # print "key in handle: " + photo_key
+        if not blobstore.get(photo_key):
             print "no photo-key"
             self.error(404)
         else:
@@ -508,5 +513,7 @@ app = webapp2.WSGIApplication([
     , ('/search', SearchHandler)
     , ('/search/result', SearchRequestHandler)
     , ('/cron/reset_views_cnt', ResetTrendingViewCnts)
-    , ('/updateReportSendingRate', UpdateReportSendingRate)]
+    , ('/updateReportSendingRate', UpdateReportSendingRate)
+    , ('/cron/send_report', SendReportCronJob)]
+
     , debug=True)
