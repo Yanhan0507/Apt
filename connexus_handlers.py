@@ -96,7 +96,7 @@ class ManagePageHandler(HTTPRequestHandler):
     def get(self):
         user = users.get_current_user()
         if user:
-            logout_url = users.create_login_url(self.request.uri)
+            logout_url = users.create_logout_url(self.request.uri)
             logout_linktext = 'Logout'
             streams = ndb.Query(ancestor = ndb.Key('Account', user.user_id())).fetch()
 
@@ -118,6 +118,7 @@ class ManagePageHandler(HTTPRequestHandler):
             }
             self.render('Management.html', **template_values)
         else:
+
             self.redirect('/login')
 
 
@@ -126,7 +127,7 @@ class CreatePageHandler(HTTPRequestHandler):
     def get(self):
         user = users.get_current_user()
         if user:
-            logout_url = users.create_login_url(self.request.uri)
+            logout_url = users.create_logout_url(self.request.uri)
             logout_linktext = 'Logout'
             template_values = {
             'user': user,
@@ -168,6 +169,17 @@ class ViewStreamHandler(HTTPRequestHandler):
         if curUser:
             stream_id = self.request.get("stream_id")
             stream_lst = Stream.query(Stream.stream_id == stream_id).fetch()
+
+            if len(stream_lst) != 1:
+                # no such stream can be found
+                template_values = {
+                    'user' : curUser,
+                    'url' : users.create_logout_url(self.request.uri),
+                    'url_linktext' : 'Logout',
+                    'error_msg' : "no such stream can be found. (userid=" + curUser.user_id() +", streamid="+ stream_id + ")"
+                }
+                self.render("Error.html", **template_values)
+                return
 
             curStream = []
             if len(stream_lst) >= 0:
@@ -212,8 +224,7 @@ class ViewStreamHandler(HTTPRequestHandler):
             # increase the views_cnt
             curStream.increase_view_cnt()
 
-            template = JINJA_ENVIRONMENT.get_template('ViewStream.html')
-            self.response.write(template.render(template_values))
+            self.render("ViewStream.html", **template_values)
         else:
             self.redirect('/login')
 
@@ -445,16 +456,23 @@ class UpdateReportSendingRate(HTTPRequestHandler):
 # This is the actual cron job which sends the email report to the user.
 class SendReportCronJob(HTTPRequestHandler):
     def get(self):
+
+        print '[Cron::SendReportCronJob] started'
+
         # get the last report time
         global global_last_report_time
         if not global_last_report_time:
             global_last_report_time = datetime.now()
             return
 
+        print '[Cron::SendReportCronJob] global_last_report_time:', global_last_report_time
         # get the sending rate
         reportRate = ReportSendingRate.query().fetch()
+
         if len(reportRate) != 0:
              reportRate = reportRate[0].sending_rate
+
+        print '[Cron::SendReportCronJob] reportRate:', reportRate
         interval_in_mins = -99
         if reportRate == 0:
             # No reports. Return
@@ -470,15 +488,15 @@ class SendReportCronJob(HTTPRequestHandler):
 
         # comparing the sending rate with the time interval since the last report
         time_passed = (datetime.now() - global_last_report_time).seconds
+        print '[Cron::SendReportCronJob] time_passed:', time_passed
         if time_passed < int(interval_in_mins)*60:
             return
 
         # send the report mail
-        global_last_report_time = datetime.now()
         trending_stream_lst = Stream.query().order(-Stream.views_cnt).fetch(3)
 
         sender_mail_addr = "trendingStreams@"+APP_ID+".appspotmail.com"
-        subject = "Trending Streams from Connexus " + global_last_report_time
+        subject = "Trending Streams from Connexus " + str(global_last_report_time)
         body = """ Here are the trending streams on Connexus now: \n
         1) %s - %s  \n
         2) %s - %s  \n
@@ -493,7 +511,9 @@ class SendReportCronJob(HTTPRequestHandler):
         for receiver_addr in report_email_list:
             mail.send_mail(sender_mail_addr, receiver_addr, subject, body)
 
-        print "Successfully sent the trending email to " + report_email_list
+        print "Successfully sent the trending email to " + str(report_email_list)
+        #reset the timer
+        global_last_report_time = datetime.now()
 
 app = webapp2.WSGIApplication([
     ('/', LoginHandler)
