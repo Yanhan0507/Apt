@@ -164,14 +164,12 @@ class CreateStream(HTTPRequestHandler):
         self.redirect('/manage')
 
 
-
 class ViewStreamHandler(HTTPRequestHandler):
     def get(self):
-        # user_id = self.request.get("user_id")
         curUser = users.get_current_user()
         if curUser:
             stream_id = self.request.get("stream_id")
-            stream_lst = Stream.query(Stream.user_id == curUser.user_id(), Stream.stream_id == stream_id).fetch()
+            stream_lst = Stream.query(Stream.stream_id == stream_id).fetch()
             curStream = []
             if len(stream_lst) >= 0:
                 curStream = stream_lst[0]
@@ -201,7 +199,7 @@ class ViewStreamHandler(HTTPRequestHandler):
                 'blob_key_lst' : curStream.blob_key_lst,
                 'image_id_lst' : curStream.image_id_lst,
                 'upload_url' : upload_url,
-                'length': len(curStream.blob_key_lst),
+                # 'length': len(curStream.blob_key_lst),
                 'subscribe_option': subscribe_option,
                 'subscribe_url' : subscribe_url,
                 'stream_name': curStream.stream_name,
@@ -211,8 +209,7 @@ class ViewStreamHandler(HTTPRequestHandler):
             # increase the views_cnt
             curStream.increase_view_cnt()
 
-            template = JINJA_ENVIRONMENT.get_template('ViewStream.html')
-            self.response.write(template.render(template_values))
+            self.render('ViewStream.html', **template_values)
         else:
             self.redirect('/login')
 
@@ -263,7 +260,7 @@ class deleteImg(HTTPRequestHandler):
 class ViewPhotoHandler(blobstore_handlers.BlobstoreDownloadHandler):
     def get(self, photo_key):
         print "key in handle: " + photo_key
-        if not blobstore.get(photo_key):
+        if not blobstore.get(str(photo_key)):
             print "no photo-key"
             self.error(404)
         else:

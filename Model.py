@@ -26,7 +26,7 @@ class Stream(ndb.Model):
         if str(image.img_id) in self.image_id_lst:
             return
         image.put()
-        self.blob_key_lst.insert(0,image.blob_key)
+        self.blob_key_lst.insert(0, image.blob_key)
         self.last_add = image.date
         self.image_id_lst.insert(0, image.img_id)
         self.put()
