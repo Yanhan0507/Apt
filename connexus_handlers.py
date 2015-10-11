@@ -1,19 +1,13 @@
-from google.appengine.api import users
-from google.appengine.ext import ndb
 from Model import Image, Stream, Subscription, ReportSendingRate
 import uuid
 
-
 import webapp2
 import jinja2
-import os
 import urllib
 import json
 from google.appengine.api import urlfetch
 from datetime import datetime
 # self defined classes
-
-import webapp2
 
 from google.appengine.api import users
 from google.appengine.ext import blobstore
@@ -22,11 +16,12 @@ from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.api import mail
 
 
+#   import the services
+from web_services import *
 
+#   import the constants
+from Constants import *
 
-# SERVICES_URL = 'http://localhost:8080' #local
-SERVICE_URL = 'http://ee382v-apt-connexus.appspot.com/'
-APP_ID = 'ee382v-apt-connexus'
 
 # Email addresses list
 report_email_list = ["ee461lta@gmail.com"]
@@ -42,7 +37,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 
 class HTTPRequestHandler(webapp2.RequestHandler):
     def callService(self, service, subservice='', **params):
-        result = urlfetch.fetch('/'.join([SERVICE_URL, 'svc', service]
+        result = urlfetch.fetch('/'.join([SERVICE_URL, 'ws', service]
                                          + ([subservice] if subservice else []))
                                 , payload=json.dumps(params), method=urlfetch.POST
                                 , headers={'Accept': 'application/json'})
@@ -139,7 +134,6 @@ class CreatePageHandler(HTTPRequestHandler):
             self.redirect('/login')
 
 
-
 class CreateStream(HTTPRequestHandler):
     def post(self):
 
@@ -165,70 +159,83 @@ class CreateStream(HTTPRequestHandler):
 
 class ViewStreamHandler(HTTPRequestHandler):
     def get(self):
-        curUser = users.get_current_user()
-        if curUser:
-            stream_id = self.request.get("stream_id")
-            stream_lst = Stream.query(Stream.stream_id == stream_id).fetch()
+        cur_user = users.get_current_user()
+        if cur_user:
+            url = users.create_logout_url(self.request.uri)
+            stream_id = self.request.get(IDENTIFIER_STREAM_ID)
+            image_req_idx_lst = '0,1,2'    # default img idx lst
 
-            if len(stream_lst) != 1:
-                # no such stream can be found
-                template_values = {
-                    'user' : curUser,
-                    'url' : users.create_logout_url(self.request.uri),
-                    'url_linktext' : 'Logout',
-                    'error_msg' : "no such stream can be found. (userid=" + curUser.user_id() +", streamid="+ stream_id + ")"
-                }
-                self.render("Error.html", **template_values)
-                return
+            status, result = self.callService('stream', 'view', stream_id=stream_id,
+                                              image_req_idx_lst=image_req_idx_lst)
 
-            curStream = []
-            if len(stream_lst) >= 0:
-                curStream = stream_lst[0]
-                str_blob_key_lst = []
-                for b_key in stream_lst[0].blob_key_lst:
-                    str_blob_key_lst.append(b_key)
+            # TODO: upload url
+            # if curUser.user_id() == result[IDENTIFIER_STREAM_OWNER]:
+
+            # Subscription logic
+            status, sub_result = self.callService('stream', 'subscribe', stream_id=stream_id,
+                                                  user_id=cur_user.user_id())
+
             # create photo upload url
             upload_url = blobstore.create_upload_url('/upload_photo')
 
-            # subscription logic:
-            # if the relationship between this stream and the current user exists,
-            # then set the <subscribe_option> and <subscribe_url> fields to un-subscribe ones.
-            sub_query = Subscription.query(Subscription.user_id == curUser.user_id(), Subscription.stream_id == stream_id).fetch()
-            if len(sub_query) != 0:
-                # subscription exists
-                subscribe_option = "Unsubscribe"
-                subscribe_url = "/subscribe?stream_id="+stream_id+"&subscribe_bool=false"
-            else:
-                # subscription doesn't exist
-                subscribe_option = "Subscribe"
-                subscribe_url = "/subscribe?stream_id="+stream_id+"&subscribe_bool=true"
-
-            description = "The owner didn't leave any description."
-            if curStream.description:
-                description = curStream.description
-
             template_values = {
-                'user' : curUser,
-                'stream_id' : stream_id,
-                'stream_owner': curStream.user_id,
-                'blob_key_lst' : str_blob_key_lst,
-                'image_id_lst' : curStream.image_id_lst,
-                'upload_url' : upload_url,
-                # 'length': len(curStream.blob_key_lst),
-                'subscribe_option': subscribe_option,
-                'subscribe_url' : subscribe_url,
-                'stream_name': curStream.stream_name,
-                'description': description
-            }
+                IDENTIFIER_CURRENT_USER: cur_user,
+                IDENTIFIER_URL: url,
+                IDENTIFIER_STREAM_OWNER: result[IDENTIFIER_STREAM_OWNER],
+                IDENTIFIER_STREAM_NAME: result[IDENTIFIER_STREAM_NAME],
+                IDENTIFIER_STREAM_DESC: result[IDENTIFIER_STREAM_DESC],
+                IDENTIFIER_IMG_IDX_RES_LIST: result[IDENTIFIER_IMG_IDX_RES_LIST],
+                IDENTIFIER_IMAGEID_LIST: result[IDENTIFIER_IMAGEID_LIST],
+                IDENTIFIER_BLOBKEY_LIST: result[IDENTIFIER_BLOBKEY_LIST],
+                IDENTIFIER_SUBSCRIPTION_OPTION: sub_result[IDENTIFIER_SUBSCRIPTION_OPTION],
+                IDENTIFIER_SUBSCRIPTION_URL: sub_result[IDENTIFIER_SUBSCRIPTION_URL],
 
-            # increase the views_cnt
-            curStream.increase_view_cnt()
+                IDENTIFIER_UPLOAD_URL: upload_url
+            }
 
             self.render("ViewStream.html", **template_values)
         else:
             self.redirect('/login')
 
 
+# Subscription handler class:
+#   process get requests for both subscribing and un-subscribing
+#   required fields: stream_id; (user exists in the request).
+class SubscriptionHandler(HTTPRequestHandler):
+    def get(self):
+        stream_id = self.request.get(IDENTIFIER_STREAM_ID)
+        current_user_id = self.request.get(IDENTIFIER_CURRENT_USER_ID)
+        if current_user_id and stream_id:
+            # check if the request is to subscribe or un-subscribe
+            subscribe_bool = self.request.get('subscribe_bool') == 'true'
+            if subscribe_bool:
+                # subscribing request
+                new_subscription_entry = Subscription(user_id=current_user_id, stream_id=stream_id)
+                new_subscription_entry.put()
+                print 'SubscriptionHandler:: user' + current_user_id + ' subscribed to stream' + stream_id
+                self.redirect('/manage')
+            else:
+                # ub-subscribing request
+                # fetch the data entry of this subscription
+                subscription_entry = Subscription.query(Subscription.stream_id == stream_id,
+                                                        Subscription.user_id == current_user_id).fetch()
+                if len(subscription_entry) != 0:
+                    subscription_entry[0].deleteSubscription()
+                    print 'SubscriptionHandler:: user' + current_user_id + ' un-subscribed to stream' + stream_id
+                    self.redirect('/manage')
+                else:
+                    # no such subscription entry can be found
+                    template_values = {
+                        'error_msg' : "no such subscription entry can be found. (userid=" + current_user_id
+                                      + ", streamid=" + stream_id + ")"
+                    }
+                    self.render("Error.html", **template_values)
+        else:
+            #no user can be found in the session; transfer to error page
+            template_values = {
+                'error_msg' : "no user can be found in the session"
+            }
+            self.render("Error.html", **template_values)
 
 
 
@@ -272,7 +279,6 @@ class deleteImg(HTTPRequestHandler):
         self.redirect('/viewStream?'+'stream_id='+stream_id)
 
 
-
 class ViewPhotoHandler(blobstore_handlers.BlobstoreDownloadHandler):
     def get(self, photo_key):
         # print "key in handle: " + photo_key
@@ -283,6 +289,7 @@ class ViewPhotoHandler(blobstore_handlers.BlobstoreDownloadHandler):
             print "photo_key: " + str(photo_key)
             self.send_blob(photo_key)
 
+
 class deleteStream(HTTPRequestHandler):
     def get(self):
         stream_id = self.request.get("stream_id")
@@ -291,6 +298,7 @@ class deleteStream(HTTPRequestHandler):
         curStream = stream_lst[0]
         curStream.deleteStream()
         self.redirect('/manage')
+
 
 class deleteStreamAll(HTTPRequestHandler):
     def get(self):
@@ -323,43 +331,6 @@ class viewAllStream(HTTPRequestHandler):
         }
         self.render('ViewAllStream.html', **template_values)
 
-# Subscription handler class:
-#   process get requests for both subscribing and un-subscribing
-#   required fields: stream_id; (user exists in the request).
-class SubscriptionHandler(HTTPRequestHandler):
-    def get(self):
-        stream_id = self.request.get('stream_id')
-        current_user = users.get_current_user()
-        if current_user and stream_id:
-            # check if the request is to subscribe or un-subscribe
-            subscribe_bool = self.request.get('subscribe_bool') == 'true'
-            if subscribe_bool:
-                # subscribing request
-                new_subscription_entry = Subscription(user_id = current_user.user_id(),
-                                           stream_id = stream_id)
-                new_subscription_entry.put()
-                print 'SubscriptionHandler:: user' + current_user.user_id() + ' subscribed to stream' + stream_id
-                self.redirect('/manage')
-            else:
-                # ub-subscribing request
-                # fetch the data entry of this subscription
-                subscription_entry = Subscription.query(Subscription.stream_id == stream_id, Subscription.user_id == current_user.user_id()).fetch()
-                if len(subscription_entry) != 0:
-                    subscription_entry[0].deleteSubscription()
-                    print 'SubscriptionHandler:: user' + current_user.user_id() + ' un-subscribed to stream' + stream_id
-                    self.redirect('/manage')
-                else:
-                    # no such subscription entry can be found
-                    template_values = {
-                        'error_msg' : "no such subscription entry can be found. (userid=" + current_user.user_id() +", streamid="+ stream_id + ")"
-                    }
-                    self.render("Error.html", **template_values)
-        else:
-            #no user can be found in the session; transfer to error page
-            template_values = {
-                'error_msg' : "no user can be found in the session"
-            }
-            self.render("Error.html", **template_values)
 
 
 # Trending Page handler:
@@ -372,7 +343,6 @@ class TrendingPageHandler(HTTPRequestHandler):
             'trending_stream_lst': trending_stream_lst
         }
         self.render('Trending.html', **template_values)
-
 
 
 class SearchHandler(HTTPRequestHandler):
@@ -424,6 +394,7 @@ class SearchRequestHandler(HTTPRequestHandler):
         }
         self.render('ViewAllStream.html', **template_values)
 
+
 # cron job getting called every hour
 # rewind the view counts
 class ResetTrendingViewCnts(HTTPRequestHandler):
@@ -432,6 +403,7 @@ class ResetTrendingViewCnts(HTTPRequestHandler):
         print 'Cron job executing ... cleaning the view counts for ', len(all_streams_lst), ' streams.'
         for stream in all_streams_lst:
             stream.reset_view_cnt()
+
 
 # This handler catches the event of updating the sending rate
 class UpdateReportSendingRate(HTTPRequestHandler):
@@ -452,6 +424,7 @@ class UpdateReportSendingRate(HTTPRequestHandler):
             dft_send_rate.put()
 
         self.redirect('/trending')
+
 
 # This is the actual cron job which sends the email report to the user.
 class SendReportCronJob(HTTPRequestHandler):
@@ -495,7 +468,7 @@ class SendReportCronJob(HTTPRequestHandler):
         # send the report mail
         trending_stream_lst = Stream.query().order(-Stream.views_cnt).fetch(3)
 
-        sender_mail_addr = "trendingStreams@"+APP_ID+".appspotmail.com"
+        sender_mail_addr = REPORT_SENDER_NAME + "@" + APP_ID + MAILBOX_SURFIX
         subject = "Trending Streams from Connexus " + str(global_last_report_time)
         body = """ Here are the trending streams on Connexus now: \n
         1) %s - %s  \n
@@ -515,6 +488,15 @@ class SendReportCronJob(HTTPRequestHandler):
         #reset the timer
         global_last_report_time = datetime.now()
 
+
+# Error message page
+class ErrorHandler(HTTPRequestHandler):
+    def get(self):
+        template_values={}
+        template_values['error_msg'] = self.request.get('error_msg')
+        self.render("Error.html", **template_values)
+
+
 app = webapp2.WSGIApplication([
     ('/', LoginHandler)
     , ('/login', LoginHandler)
@@ -528,12 +510,18 @@ app = webapp2.WSGIApplication([
     , ('/upload_photo', addImg)
     , ('/stream/delete', deleteImg)
     , ('/deleteStream/all', deleteStreamAll)
-    , ('/subscribe', SubscriptionHandler)
     , ('/trending', TrendingPageHandler)
     , ('/search', SearchHandler)
     , ('/search/result', SearchRequestHandler)
     , ('/cron/reset_views_cnt', ResetTrendingViewCnts)
     , ('/updateReportSendingRate', UpdateReportSendingRate)
-    , ('/cron/send_report', SendReportCronJob)]
+    , ('/cron/send_report', SendReportCronJob)
+    , ('/error', )
+    #below are the web services
+    , ('/ws/stream/view', ViewStreamService)
+    , ('/ws/stream/subscribe', SubscriptionService)
+    , ('/subscribe', SubscriptionHandler)
+    ]
+
 
     , debug=True)

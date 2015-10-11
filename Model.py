@@ -22,6 +22,7 @@ class Stream(ndb.Model):
     viewsRecording = ndb.DateTimeProperty(repeated=True)
     last_add = ndb.DateTimeProperty(auto_now_add=True)
 
+    @classmethod
     def addImage(self, image):
         if str(image.img_id) in self.image_id_lst:
             return
@@ -61,6 +62,11 @@ class Stream(ndb.Model):
     def reset_view_cnt(self):
         self.views_cnt = 0
         self.put()
+
+    def get_stream(self, stream_id):
+        stream = Stream.query(Stream.stream_id == stream_id).fetch()
+        #   return the stream if the stream list is not empty
+        return stream[0] if stream else stream
 
 
 # Subscription Data Model:
