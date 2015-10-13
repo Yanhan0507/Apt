@@ -69,6 +69,10 @@ class Stream(ndb.Model):
         #   return the stream if the stream list is not empty
         return stream[0] if stream else stream
 
+    def dumpStream(self):
+        return {k:v if v is None else (str(v) if not hasattr(v,'__iter__') else map(str,v))
+                for k,v in self.to_dict().items()}
+
 
 # Subscription Data Model:
 #   Each object indicates a subscription relationship between a user and a stream

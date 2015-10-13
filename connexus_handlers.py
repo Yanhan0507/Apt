@@ -85,26 +85,23 @@ class ManagePageHandler(HTTPRequestHandler):
             logout_url = users.create_logout_url(self.request.uri)
             logout_linktext = 'Logout'
 
-            # TODO:
             # call service to get all streams
-            streams = ndb.Query(ancestor = ndb.Key('Account', user.user_id())).fetch()
+            status, result = self.callService('stream', 'query', user_id=user.user_id(),
+                                                         check_subscription=False)
 
-            # TODO:
+            user_streams_list = result[IDENTIFIER_USER_STREAM_LIST]
+
             # get user subscriptions
-            subscribed_list = Subscription.query(Subscription.user_id == user.user_id()).fetch()
-            subscribed_streams = []
-            for subscribed_item in subscribed_list:
-                sub_stream = Stream.query(Stream.stream_id == subscribed_item.stream_id).fetch()
-                if len(sub_stream) != 0:
-                    subscribed_streams.append(sub_stream[0])
+            status, result = self.callService('stream', 'query', user_id=user.user_id(),
+                                                         check_subscription=True)
+            user_sub_streams_list = result[IDENTIFIER_USER_SUB_STREAM_LIST]
 
-            sorted_streams = sorted(streams,key=lambda  stream: stream.last_add, reverse = True )
             template_values = {
                 'user': user,
                 'url': logout_url,
                 'url_linktext': logout_linktext,
-                'user_streams': sorted_streams,
-                'subscribed_streams':subscribed_streams
+                'user_streams': user_streams_list,
+                'subscribed_streams': user_sub_streams_list
             }
             self.render('Management.html', **template_values)
         else:
@@ -517,7 +514,8 @@ app = webapp2.WSGIApplication([
     ('/ws/stream/subscribe', SubscriptionService),
     ('/subscribe', SubscriptionHandler),
     ('/ws/stream/upload_image', UploadImageService),
-    ('/ws/stream/create', CreateStreamService)
+    ('/ws/stream/create', CreateStreamService),
+    ('/ws/stream/query', StreamQueryService)
 
     ]
 
