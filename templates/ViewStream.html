@@ -67,40 +67,6 @@
     </div>
     <div>
 
-{#        <table>#}
-{#            <tr>#}
-{#                <td align = "center" valign="center">#}
-{#                    <a href = "http://www.menucool.com/slider/jsImgSlider/images/image-slider-2.jpg" data-gallery>#}
-{#                    <img src="http://www.menucool.com/slider/jsImgSlider/images/image-slider-2.jpg" height = "200" width = "300">#}
-{##}
-{#                        </a>#}
-{##}
-{##}
-{#                </td>#}
-{##}
-{#                <td align = "center" valign="center">#}
-{#                    <a href = "http://www.keenthemes.com/preview/metronic/theme/assets/global/plugins/jcrop/demos/demo_files/image1.jpg" data-gallery>#}
-{#                    <img src="http://www.keenthemes.com/preview/metronic/theme/assets/global/plugins/jcrop/demos/demo_files/image1.jpg" height = "200" width = "300">#}
-{#                    </img>#}
-{#                    </a>#}
-{#                </td>#}
-{#                <td align = "center" valign="center">#}
-{#                    <a href = "http://www.keenthemes.com/preview/metronic/theme/assets/global/plugins/jcrop/demos/demo_files/image1.jpg" data-gallery>#}
-{#                    <img src="http://www.keenthemes.com/preview/metronic/theme/assets/global/plugins/jcrop/demos/demo_files/image1.jpg" height = "200" width = "300">#}
-{#                    </img>#}
-{#                    </a>#}
-{#                </td>#}
-{#            </tr>#}
-{##}
-{#            <tr>#}
-{#                <td align = "center" valign="center">#}
-{#                   <a href = "http://www.keenthemes.com/preview/metronic/theme/assets/global/plugins/jcrop/demos/demo_files/image1.jpg" data-gallery>#}
-{#                    <img src="http://www.keenthemes.com/preview/metronic/theme/assets/global/plugins/jcrop/demos/demo_files/image1.jpg" height = "200" width = "300">#}
-{#                    </img>#}
-{#                    </a>#}
-{#                </td>#}
-{#            </tr>#}
-{#        </table>#}
         <table id = "pictures">
             <tbody>
             {% for i in range(blob_key_lst|length) %}
@@ -110,9 +76,9 @@
                     <td align = "center" valign="center">
                         <a href = "/view_photo/{{ blob_key_lst[i] }}"  data-gallery>
                             <img src="/view_photo/{{ blob_key_lst[i] }}" height = "200" width = "300">
-                                {% if user.user_id() == stream_owner %}
-                                    <li align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></li>
-                                {% endif %}
+{#                                {% if user.user_id() == stream_owner %}#}
+{#                                    <li align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></li>#}
+{#                                {% endif %}#}
                              </img>
                         </a>
                     </td>
