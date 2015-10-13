@@ -67,6 +67,9 @@
     </div>
     <div>
 
+        <table>
+ 
+        </table>
         <table id = "pictures">
             <tbody>
             {% for i in range(blob_key_lst|length) %}
@@ -76,9 +79,6 @@
                     <td align = "center" valign="center">
                         <a href = "/view_photo/{{ blob_key_lst[i] }}"  data-gallery>
                             <img src="/view_photo/{{ blob_key_lst[i] }}" height = "200" width = "300">
-{#                                {% if user.user_id() == stream_owner %}#}
-{#                                    <li align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></li>#}
-{#                                {% endif %}#}
                              </img>
                         </a>
                     </td>
