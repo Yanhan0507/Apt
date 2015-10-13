@@ -117,10 +117,11 @@ class SubscriptionService(ServiceHandler):
             subscribe_option = "Subscribe"
             subscribe_url = "/subscribe?stream_id="+stream_id+"&subscribe_bool=true"\
                             + "&"+IDENTIFIER_CURRENT_USER_ID+"=" + current_user_id
-        self.respond(subscribe_option=subscribe_option, subscribe_url=subscribe_url, status="Success")
+        self.respond(subscribe_option=subscribe_option, subscribe_url=subscribe_url, status="success")
 
 
 # Blobstore related services
+# ViewImageService
 class ViewImageService(blobstore_handlers.BlobstoreDownloadHandler):
     def get(self):
         blob_key = self.request.get(KEYWORD_BLOBKEY)
@@ -130,6 +131,33 @@ class ViewImageService(blobstore_handlers.BlobstoreDownloadHandler):
             self.send_blob(blob_key)
 
 
+# RemoveImageService
+# Service Address: /ws/stream/remove_image
+# Request Fields: IDENTIFIER_CURRENT_USER_ID, IDENTIFIER_STREAM_ID, IDENTIFIER_IMAGEID
+class RemoveImageService(ServiceHandler):
+    def post(self):
+        req_json = json.loads(self.request.body)
+        stream_id = req_json[IDENTIFIER_STREAM_ID]
+        current_user_id = req_json[IDENTIFIER_CURRENT_USER_ID]
+        photo_key = req_json[IDENTIFIER_PHOTO_KEY]
+
+        response = {}
+        stream = Stream.get_stream(stream_id)
+
+        if not (stream_id and current_user_id and photo_key and stream):
+            response['error'] = "Failed to find photo_key (" + photo_key + ") for user (" + current_user_id \
+                                + ") under stream(" + stream_id+")."
+            self.respond(**response)
+        elif stream.user_id != current_user_id:
+            response['error'] = "Failed to remove image user (" + current_user_id \
+                                + ") is not the owner of stream(" + stream_id+")."
+            self.respond(**response)
+        else:
+            stream.deleteImage(photo_key)
+            self.respond(status="success")
+
+
+# UploadImageService
 # Service Address: /ws/stream/upload_image
 # Request Fields: IDENTIFIER_CURRENT_USER_ID, IDENTIFIER_STREAM_ID, IDENTIFIER_STREAM_DESC
 class UploadImageService(blobstore_handlers.BlobstoreUploadHandler):

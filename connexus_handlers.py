@@ -230,16 +230,24 @@ class SubscriptionHandler(HTTPRequestHandler):
             self.render("Error.html", **template_values)
 
 
-class deleteImg(HTTPRequestHandler):
+class RemoveImageHandler(HTTPRequestHandler):
     def get(self):
+        user_id = users.get_current_user().user_id()
         photo_Key = self.request.get("photo_Key")
         stream_id = self.request.get("stream_id")
-        user_id = users.get_current_user().user_id()
-        stream_lst = Stream.query(Stream.user_id == user_id, Stream.stream_id == stream_id).fetch()
-        img_lst = Image.query(Image.user_id == user_id, Image.img_id == photo_Key).fetch()
-        curStream = stream_lst[0]
-        curImg = img_lst[0]
-        curStream.deleteImage(curImg)
+
+        # call service
+        status, result = self.callService('stream', 'remove_image', user_id=user_id, stream_id=stream_id,
+                                          photo_key=photo_Key)
+
+
+        # user_id = users.get_current_user().user_id()
+        # stream_lst = Stream.query(Stream.user_id == user_id, Stream.stream_id == stream_id).fetch()
+        # img_lst = Image.query(Image.user_id == user_id, Image.img_id == photo_Key).fetch()
+        # curStream = stream_lst[0]
+        # curImg = img_lst[0]
+        # curStream.deleteImage(curImg)
+
         self.redirect('/viewStream?'+'stream_id='+stream_id)
 
 
@@ -515,7 +523,8 @@ app = webapp2.WSGIApplication([
     ('/subscribe', SubscriptionHandler),
     ('/ws/stream/upload_image', UploadImageService),
     ('/ws/stream/create', CreateStreamService),
-    ('/ws/stream/query', StreamQueryService)
+    ('/ws/stream/query', StreamQueryService),
+    ('/ws/stream/remove_image', RemoveImageService)
 
     ]
 

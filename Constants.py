@@ -3,8 +3,8 @@ import jinja2
 __author__ = 'ChenguangLiu'
 
 # DEPLOYMENT CONFIGURATIONS
-SERVICE_URL = 'http://localhost:8080' #local
-# SERVICE_URL = 'http://ee382v-apt-connexus.appspot.com/'
+# SERVICE_URL = 'http://localhost:8080' #local
+SERVICE_URL = 'http://ee382v-apt-connexus.appspot.com/'
 APP_ID = 'ee382v-apt-connexus'
 MAILBOX_SURFIX = '.appspotmail.com'
 REPORT_SENDER_NAME = 'trendingStreams'
@@ -33,6 +33,8 @@ IDENTIFIER_IMG_IDX_REQ_LIST = 'image_req_idx_lst'
 IDENTIFIER_IMG_IDX_RES_LIST = 'image_res_idx_lst'
 IDENTIFIER_BLOBKEY_LIST = 'blob_key_lst'
 IDENTIFIER_IMAGEID_LIST = 'image_id_lst'
+IDENTIFIER_IMAGEID = 'image_id'
+IDENTIFIER_PHOTO_KEY = 'photo_key'
 IDENTIFIER_STREAM_OWNER = 'stream_owner'
 IDENTIFIER_COVER_URL = 'cover_url'
 
