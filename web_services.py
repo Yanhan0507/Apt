@@ -164,3 +164,34 @@ class UploadImageService(blobstore_handlers.BlobstoreUploadHandler):
 # Service for querying user's streams or his subscribed streams
 # Service Address: /ws/stream/query
 # Request Fields: IDENTIFIER_CURRENT_USER_ID(str), IDENTIFIER_CHECK_SUBSCRIPTION(boolean)
+class StreamQueryService(ServiceHandler):
+    def post(self):
+        req_json = json.loads(self.request.body)
+        user_id = req_json[IDENTIFIER_CURRENT_USER_ID]
+        is_check_subscription = req_json[IDENTIFIER_CHECK_SUBSCRIPTION]
+        if not is_check_subscription:
+            print 'StreamQueryService >> checking all streams created by user[', user_id, ']'
+            user_streams_list = ndb.Query(ancestor=ndb.Key('Account', user_id)).fetch()
+            sorted_streams_list = sorted(user_streams_list, key=lambda stream: stream.last_add, reverse=True)
+            sid_list = []
+            for stream in sorted_streams_list:
+                sid_list.append(stream.stream_id)
+
+            dumpablelist = [Stream.get_stream(stream_id).dumpStream()
+                            for stream_id in sid_list]
+
+            self.respond(user_streams_list=dumpablelist, status="Success")
+
+        else:
+            print 'StreamQueryService >> checking all streams subscribed by user[', user_id, ']'
+            subscribed_list = Subscription.query(Subscription.user_id == user_id).fetch()
+            subscribed_stream_ids = []
+            for subscribed_item in subscribed_list:
+                sub_stream = Stream.query(Stream.stream_id == subscribed_item.stream_id).fetch()
+                if len(sub_stream) != 0:
+                    subscribed_stream_ids.append(sub_stream[0].stream_id)
+
+            dumpablelist = [Stream.get_stream(stream_id).dumpStream()
+                            for stream_id in subscribed_stream_ids]
+
+            self.respond(user_sub_streams_list=dumpablelist, status="Success")

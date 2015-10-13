@@ -44,5 +44,8 @@ IDENTIFIER_CHECK_SUBSCRIPTION = 'check_subscription'
 
 IDENTIFIER_UPLOAD_URL = 'upload_url'
 
+IDENTIFIER_USER_STREAM_LIST = 'user_streams_list'
+IDENTIFIER_USER_SUB_STREAM_LIST = 'user_sub_streams_list'
+
 
 NROF_IMGS_PER_PAGE = 3
