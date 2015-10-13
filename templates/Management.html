@@ -107,7 +107,7 @@
                 </td>
                 <td width="15%">
                     <!--Unsubscribe column-->
-                    <a href="/subscribe?subscribe_bool=false&stream_id={{ sub_stream['stream_id'] }}"> Unsubscribe</a>
+                    <a href="/subscribe?subscribe_bool=false&stream_id={{ sub_stream['stream_id'] }}&user_id={{ user.user_id() }}"> Unsubscribe</a>
                 </td>
             </tr>
             {% endfor %}

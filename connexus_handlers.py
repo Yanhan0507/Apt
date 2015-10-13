@@ -506,7 +506,7 @@ app = webapp2.WSGIApplication([
     ('/viewAllStream', viewAllStream),
     ('/view_photo/([^/]+)?', ViewPhotoHandler),
     # , ('/upload_photo', addImg)
-    ('/stream/delete', deleteImg),
+    ('/stream/delete', RemoveImageHandler),
     ('/deleteStream/all', deleteStreamAll),
     ('/trending', TrendingPageHandler),
     ('/search', SearchHandler),
