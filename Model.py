@@ -22,9 +22,9 @@ class Stream(ndb.Model):
     viewsRecording = ndb.DateTimeProperty(repeated=True)
     last_add = ndb.DateTimeProperty(auto_now_add=True)
 
-    @classmethod
-    def addImage(self, image):
-        if str(image.img_id) in self.image_id_lst:
+    @ndb.transactional(xg=True)
+    def addImage(self, key, image):
+        if image.img_id in self.image_id_lst:
             return
         image.put()
         self.blob_key_lst.insert(0, image.blob_key)
@@ -63,6 +63,7 @@ class Stream(ndb.Model):
         self.views_cnt = 0
         self.put()
 
+    @classmethod
     def get_stream(self, stream_id):
         stream = Stream.query(Stream.stream_id == stream_id).fetch()
         #   return the stream if the stream list is not empty

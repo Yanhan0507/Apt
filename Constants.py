@@ -1,3 +1,5 @@
+import jinja2
+
 __author__ = 'ChenguangLiu'
 
 # DEPLOYMENT CONFIGURATIONS
@@ -6,6 +8,12 @@ SERVICE_URL = 'http://localhost:8080' #local
 APP_ID = 'ee382v-apt-connexus'
 MAILBOX_SURFIX = '.appspotmail.com'
 REPORT_SENDER_NAME = 'trendingStreams'
+# HTML_TEMPLATES FOLDER
+JINJA_ENVIRONMENT = jinja2.Environment(
+    loader=jinja2.FileSystemLoader('templates'),
+    extensions=['jinja2.ext.autoescape'],
+    autoescape=True)
+
 
 
 #   A FEW CONSTANT STRINGS USED ACROSS ALL THE SCRIPTS
@@ -26,9 +34,13 @@ IDENTIFIER_IMG_IDX_RES_LIST = 'image_res_idx_lst'
 IDENTIFIER_BLOBKEY_LIST = 'blob_key_lst'
 IDENTIFIER_IMAGEID_LIST = 'image_id_lst'
 IDENTIFIER_STREAM_OWNER = 'stream_owner'
+IDENTIFIER_COVER_URL = 'cover_url'
+
+IDENTIFIER_GEO_VIEW = 'geo_view'
 
 IDENTIFIER_SUBSCRIPTION_OPTION = 'subscribe_option'
 IDENTIFIER_SUBSCRIPTION_URL = 'subscribe_url'
+IDENTIFIER_CHECK_SUBSCRIPTION = 'check_subscription'
 
 IDENTIFIER_UPLOAD_URL = 'upload_url'
 

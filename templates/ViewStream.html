@@ -2,13 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Connexus: Create a stream</title>
 
-            <!-- Bootstrap core CSS -->
+    <!--Dropzone CSS-->
+    <link href="/css/dropzone.css" rel="stylesheet">
+    <!-- Bootstrap core CSS -->
     <link href="/css/bootstrap.min.css" rel="stylesheet">
-      <!-- Custom styles for this template -->
     <link href="/css/jumbotron.css" rel="stylesheet">
-     <!--<link href="/css/format.css" rel="stylesheet">-->
+    <link rel="stylesheet" href="/css/bootstrap-image-gallery.css">
+    <link rel="stylesheet" href="/css/demo.css">
+
+    <!--File Upload Script-->
+    <script src="/js/dropzone.js"></script>
+
+
 </head>
 
 <body>
@@ -49,6 +58,11 @@
         <h2> Welcome to {{stream_name}} </h2>
         <p4> Description: {{stream_description}}</p4>
     </div>
+    <br>
+    <div>
+        <a href="{{ subscribe_url }}">  {{ subscribe_option }} </a>
+        <a href="/viewStream?geo_view=true&stream_id={{ stream_id }}">Geo View</a>
+    </div>
     <div>
         <table id = "pictures">
             <tbody>
@@ -57,12 +71,13 @@
                 <tr>
                 {% endif %}
                     <td align = "center" valign="center">
-                        <img src="/view_photo/{{ blob_key_lst[i] }}" height = "200" width = "300">
-                            {% if user.user_id() == stream_owner %}
-                                <li align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></li>
-                            {% endif %}
-                         </img>
-
+                        <a href = "/view_photo/{{ blob_key_lst[i] }}"  data-gallery>
+                            <img src="/view_photo/{{ blob_key_lst[i] }}" height = "200" width = "300">
+                                {% if user.user_id() == stream_owner %}
+                                    <li align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></li>
+                                {% endif %}
+                             </img>
+                        </a>
                     </td>
                 {% if i%3 == 2 %}
                 </tr>
@@ -73,27 +88,88 @@
 
     </div>
 <br>
-    {% if user.user_id() == stream_owner %}
-        <div>
-            <form id = "photo_upload" action = "{{upload_url}}" method="POST"
-                  enctype="multipart/form-data" >
-            <h4> Add an Image </h4>
-                <input type = "hidden" name = "stream_id" value = "{{stream_id}}">
-                <label> File Name </label>
-                <input type="file" name="photo_file">
-                <input type="text" name = "description"/>
-                <!--<input type="file" name="photo" size="25" />-->
-                <input type="submit" name="submit" value="Submit" />
-            </form>
-        </div>
-    {% endif %}
 
-    <br>
-    <div>
-        <a href="{{ subscribe_url }}">  {{ subscribe_option }} </a>
+    <!-- The Bootstrap Image Gallery lightbox, should be a child element of the document body -->
+    <div id="blueimp-gallery" class="blueimp-gallery">
+        <!-- The container for the modal slides -->
+        <div class="slides"></div>
+        <!-- Controls for the borderless lightbox -->
+        <h3 class="title"></h3>
+        <a class="prev">‹</a>
+        <a class="next">›</a>
+        <a class="close">×</a>
+        <a class="play-pause"></a>
+        <ol class="indicator"></ol>
+        <!-- The modal dialog, which will be used to wrap the lightbox content -->
+        <div class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title"></h4>
+                    </div>
+                    <div class="modal-body next"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left prev">
+                            <i class="glyphicon glyphicon-chevron-left"></i>
+                            Previous
+                        </button>
+                        <button type="button" class="btn btn-primary next">
+                            Next
+                            <i class="glyphicon glyphicon-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <div class = "mid-table">
+        {% if user.user_id() == stream_owner %}
+            <div id="dropzone">
+                <!--<form id = "photo_upload" action = "{{upload_url}}" method="POST"-->
+                      <!--enctype="multipart/form-data" >-->
+                <!--<h4> Add an Image </h4>-->
+                    <!--<input type = "hidden" name = "stream_id" value = "{{stream_id}}">-->
+                    <!--<label> File Name </label>-->
+                    <!--<input type="file" name="photo_file">-->
+                    <!--<input type = "hidden" name = "stream_id" value = "{{stream_id}}">-->
+                    <!--&lt;!&ndash;<input type="file" name="photo" size="25" />&ndash;&gt;-->
+                    <!--<input type="submit" name="submit" value="Submit" />-->
+                <!--</form>-->
 
+                <form action="{{ upload_url }}" class="dropzone needsclick dz-clickable" id="myDropzone"
+                      method="POST" enctype="multipart/form-data">
+                    <input type = "hidden" name = "stream_id" value = "{{ stream_id }}">
+                    <input type = "hidden" name = "user_id" value = "{{ user.user_id() }}">
+                </form>
+                <input type="button" value="Submit" id="submit_button">
+
+            </div>
+        {% endif %}
+    </div>
+    <br>
+
+<script src="/jquery.min.js"></script>
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="//blueimp.github.io/Gallery/js/jquery.blueimp-gallery.min.js"></script>
+<script src="js/bootstrap-image-gallery.js"></script>
+<script src="js/demo.js"></script>
+<script>
+    Dropzone.options.myDropzone = {
+
+        autoProcessQueue: false,
+      init: function() {
+          var submitButton = document.querySelector("#submit_button")
+          myDropzone = this;
+          submitButton.addEventListener("click", function() {
+              myDropzone.options.autoProcessQueue = true;
+              myDropzone.processQueue(); // Tell Dropzone to process all queued files.
+          });
+      }
+
+    };
+</script>
 
 </body>
 </html>

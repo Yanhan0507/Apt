@@ -1,8 +1,7 @@
 from Model import Image, Stream, Subscription, ReportSendingRate
-import uuid
 
 import webapp2
-import jinja2
+
 import urllib
 import json
 from google.appengine.api import urlfetch
@@ -10,9 +9,7 @@ from datetime import datetime
 # self defined classes
 
 from google.appengine.api import users
-from google.appengine.ext import blobstore
 from google.appengine.ext import ndb
-from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.api import mail
 
 
@@ -27,12 +24,6 @@ from Constants import *
 report_email_list = ["ee461lta@gmail.com"]
 DEFAULT_SENDING_RATE = 2    # 1 hour
 global_last_report_time = None
-
-# HTML_TEMPLATES FOLDER
-JINJA_ENVIRONMENT = jinja2.Environment(
-    loader=jinja2.FileSystemLoader('templates'),
-    extensions=['jinja2.ext.autoescape'],
-    autoescape=True)
 
 
 class HTTPRequestHandler(webapp2.RequestHandler):
@@ -93,9 +84,13 @@ class ManagePageHandler(HTTPRequestHandler):
         if user:
             logout_url = users.create_logout_url(self.request.uri)
             logout_linktext = 'Logout'
+
+            # TODO:
+            # call service to get all streams
             streams = ndb.Query(ancestor = ndb.Key('Account', user.user_id())).fetch()
 
-            #get user subscriptions
+            # TODO:
+            # get user subscriptions
             subscribed_list = Subscription.query(Subscription.user_id == user.user_id()).fetch()
             subscribed_streams = []
             for subscribed_item in subscribed_list:
@@ -138,21 +133,12 @@ class CreateStream(HTTPRequestHandler):
     def post(self):
 
         user_id = users.get_current_user().user_id()
-        stream_name = self.request.get("streamName")
-        stream_id = uuid.uuid4()
-        cover_url = self.request.get("cover_url")
-        content = self.request.get("content")
+        stream_name = self.request.get(IDENTIFIER_STREAM_NAME)
+        cover_url = self.request.get(IDENTIFIER_COVER_URL)
+        stream_description = self.request.get(IDENTIFIER_STREAM_DESC)
 
-        new_stream = Stream(parent = ndb.Key('Account', user_id)
-                            ,user_id = user_id
-                            ,stream_id = str(stream_id)
-                            ,stream_name = stream_name
-                            ,views_cnt = 0
-                            ,total_views_cnt = 0
-                            ,cover_url = cover_url
-                            ,description = content)
-
-        new_stream.put()
+        self.callService('stream', 'create', user_id=user_id, stream_name=stream_name, cover_url=cover_url,
+                         stream_description=stream_description)
 
         self.redirect('/manage')
 
@@ -163,26 +149,29 @@ class ViewStreamHandler(HTTPRequestHandler):
         if cur_user:
             url = users.create_logout_url(self.request.uri)
             stream_id = self.request.get(IDENTIFIER_STREAM_ID)
-            image_req_idx_lst = '0,1,2'    # default img idx lst
+            img_req_idx_lst = '0,1,2'    # default img idx lst
 
             status, result = self.callService('stream', 'view', stream_id=stream_id,
-                                              image_req_idx_lst=image_req_idx_lst)
-
-            # TODO: upload url
-            # if curUser.user_id() == result[IDENTIFIER_STREAM_OWNER]:
+                                              image_req_idx_lst=img_req_idx_lst)
 
             # Subscription logic
             status, sub_result = self.callService('stream', 'subscribe', stream_id=stream_id,
                                                   user_id=cur_user.user_id())
 
             # create photo upload url
-            upload_url = blobstore.create_upload_url('/upload_photo')
+            # it should redirect to the ViewStream page
+            if cur_user.user_id() == result[IDENTIFIER_STREAM_OWNER]:
+                # redirect = '/viewStream/?' + urllib.urlencode({ IDENTIFIER_STREAM_ID: stream_id })
+                upload_url = blobstore.create_upload_url('/ws/stream/upload_image')
+                print 'ViewStreamHandler >> generate upload url: ', upload_url
+                # redirect_url = '/ws/stream/upload_image?' + urllib.urlencode({IDENTIFIER_STREAM_ID: stream_id})
 
             template_values = {
                 IDENTIFIER_CURRENT_USER: cur_user,
                 IDENTIFIER_URL: url,
                 IDENTIFIER_STREAM_OWNER: result[IDENTIFIER_STREAM_OWNER],
                 IDENTIFIER_STREAM_NAME: result[IDENTIFIER_STREAM_NAME],
+                IDENTIFIER_STREAM_ID: stream_id,
                 IDENTIFIER_STREAM_DESC: result[IDENTIFIER_STREAM_DESC],
                 IDENTIFIER_IMG_IDX_RES_LIST: result[IDENTIFIER_IMG_IDX_RES_LIST],
                 IDENTIFIER_IMAGEID_LIST: result[IDENTIFIER_IMAGEID_LIST],
@@ -193,7 +182,13 @@ class ViewStreamHandler(HTTPRequestHandler):
                 IDENTIFIER_UPLOAD_URL: upload_url
             }
 
-            self.render("ViewStream.html", **template_values)
+            # Geo View
+            is_geo_view = self.request.get(IDENTIFIER_GEO_VIEW)
+            if not is_geo_view:
+                self.render("ViewStream.html", **template_values)
+            else:
+                self.render("ViewStream_Geo.html", **template_values)
+
         else:
             self.redirect('/login')
 
@@ -236,34 +231,6 @@ class SubscriptionHandler(HTTPRequestHandler):
                 'error_msg' : "no user can be found in the session"
             }
             self.render("Error.html", **template_values)
-
-
-
-class addImg(blobstore_handlers.BlobstoreUploadHandler):
-    def post(self):
-        user_id = users.get_current_user().user_id()
-        stream_id = self.request.get("stream_id")
-        description = self.request.get("description")
-
-        #get the blob store object
-        upload = self.get_uploads()[0]
-        img_id = uuid.uuid4()
-        print "addImg: blob_key: " + str(upload.key())
-        user_photo = Image(user_id = users.get_current_user().user_id(),
-                           img_id = str(img_id),
-                           content = description,
-                           blob_key = upload.key()
-                            )
-        stream_lst = Stream.query(Stream.user_id == user_id, Stream.stream_id == stream_id).fetch()
-        curStream = stream_lst[0]
-        if curStream:
-            print "addImg>> stream id:", stream_id, ", list length: ", len(stream_lst)
-            curStream.addImage(user_photo)
-            print "addImg>> blob_key_lst after adding: ", curStream.blob_key_lst
-        else:
-            print "Fail to add user photo ", user_photo, "to stream ", stream_id
-
-        self.redirect('/viewStream?'+'stream_id='+stream_id)
 
 
 class deleteImg(HTTPRequestHandler):
@@ -332,7 +299,6 @@ class viewAllStream(HTTPRequestHandler):
         self.render('ViewAllStream.html', **template_values)
 
 
-
 # Trending Page handler:
 #
 class TrendingPageHandler(HTTPRequestHandler):
@@ -383,7 +349,6 @@ class SearchRequestHandler(HTTPRequestHandler):
         logout_linktext = 'Logout'
 
         sorted_streams = sorted(return_lst,key=lambda  stream: stream.last_add, reverse = True )
-
 
         template_values = {
             'streams' :  sorted_streams,
@@ -497,30 +462,63 @@ class ErrorHandler(HTTPRequestHandler):
         self.render("Error.html", **template_values)
 
 
+# # Error message page
+# class UploadUrlRequestHandler(HTTPRequestHandler):
+#     def get(self):
+#         upload_url = blobstore.create_upload_url('/ws/stream/upload_image')
+#         print 'UploadUrlRequestHandler >> generate a new upload url: ', upload_url
+#         self.response.write(upload_url)
+
+
+# Auto Complete Handler
+# Service Address: /autocomplete
+class AutoCompleteHandler(HTTPRequestHandler):
+    def get(self):
+        pattern = self.request.get("term")
+        stream_lst = Stream.query().fetch()
+        ret_lst = []
+        if pattern:
+            for stream in stream_lst:
+                if pattern in stream.stream_name:
+                    ret_lst.append(stream.stream_name)
+        ret_lst.sort()
+        if len(ret_lst) == 0:
+            valid = False
+        else:
+            valid = True
+        context = {"valid": valid, "ret_lst": ret_lst}
+        self.response.write(json.dumps(context))
+
+
 app = webapp2.WSGIApplication([
-    ('/', LoginHandler)
-    , ('/login', LoginHandler)
-    , ('/manage', ManagePageHandler)
-    , ('/create', CreatePageHandler)
-    , ('/createStream', CreateStream)
-    , ('/deleteStream', deleteStream)
-    , ('/viewStream', ViewStreamHandler)
-    , ('/viewAllStream', viewAllStream)
-    , ('/view_photo/([^/]+)?', ViewPhotoHandler)
-    , ('/upload_photo', addImg)
-    , ('/stream/delete', deleteImg)
-    , ('/deleteStream/all', deleteStreamAll)
-    , ('/trending', TrendingPageHandler)
-    , ('/search', SearchHandler)
-    , ('/search/result', SearchRequestHandler)
-    , ('/cron/reset_views_cnt', ResetTrendingViewCnts)
-    , ('/updateReportSendingRate', UpdateReportSendingRate)
-    , ('/cron/send_report', SendReportCronJob)
-    , ('/error', )
+    ('/', LoginHandler),
+    ('/login', LoginHandler),
+    ('/manage', ManagePageHandler),
+    ('/create', CreatePageHandler),
+    ('/createStream', CreateStream),
+    ('/deleteStream', deleteStream),
+    ('/viewStream', ViewStreamHandler),
+    ('/viewAllStream', viewAllStream),
+    ('/view_photo/([^/]+)?', ViewPhotoHandler),
+    # , ('/upload_photo', addImg)
+    ('/stream/delete', deleteImg),
+    ('/deleteStream/all', deleteStreamAll),
+    ('/trending', TrendingPageHandler),
+    ('/search', SearchHandler),
+    ('/search/result', SearchRequestHandler),
+    ('/cron/reset_views_cnt', ResetTrendingViewCnts),
+    ('/updateReportSendingRate', UpdateReportSendingRate),
+    ('/cron/send_report', SendReportCronJob),
+    ('/error', ErrorHandler),
+    # ('/upload_url_generate', UploadUrlRequestHandler),
+    ('/autoComplete', AutoCompleteHandler),
     #below are the web services
-    , ('/ws/stream/view', ViewStreamService)
-    , ('/ws/stream/subscribe', SubscriptionService)
-    , ('/subscribe', SubscriptionHandler)
+    ('/ws/stream/view', ViewStreamService),
+    ('/ws/stream/subscribe', SubscriptionService),
+    ('/subscribe', SubscriptionHandler),
+    ('/ws/stream/upload_image', UploadImageService),
+    ('/ws/stream/create', CreateStreamService)
+
     ]
 
 

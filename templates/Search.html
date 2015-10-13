@@ -9,6 +9,55 @@
       <!-- Custom styles for this template -->
     <link href="/css/jumbotron.css" rel="stylesheet">
 
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+     <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
+    <script type = "text/javascript">
+    $(function(){
+        var cache = {};
+        var time_record = {};
+        $("#autoBox").autocomplete({
+            minLength: 1,
+            source: function(request, response) {
+                var term = request.term;
+                if (term in cache) {
+                    if (new Date().getTime() - time_record[term] < 3600000) {
+                        ret_lst = [];
+                        if (cache[term].length > 20) {
+                            for (i = 0; i < 20; i++) {
+                                ret_lst[ret_lst.length] = cache[term][i];
+                            }
+                        }
+                        else {
+                            ret_lst = cache[term];
+                        }
+
+                        response(ret_lst);
+                        return;
+                    }
+                }
+                $.getJSON('/autoComplete', request, function (data, status, xhr) {
+                    if (data.valid) {
+                        cache[term] = data.ret_lst;
+                        time_record[term] = new Date().getTime();
+                        ret_lst = [];
+                        if (cache[term].length > 20) {
+                            for (i = 0; i < 20; i++) {
+                                ret_lst[ret_lst.length] = cache[term][i]
+                            }
+                        }
+                        else {
+                            ret_lst = cache[term];
+                        }
+                        response(ret_lst);
+                    }
+                });
+            }
+        });
+    });
+</script>
+
 </head>
 <body>
     <nav class="navbar navbar-inverse navbar-fixed-top">
@@ -51,7 +100,7 @@
                  <li> Provide as much as information as you can</li>
             </ul>
             <div>
-                <input name = "keyWord" size = "40">
+                <input id = "autoBox" name = "keyWord" size = "40">
             </div>
             <div>
                 <p>  search by title or content </p>
