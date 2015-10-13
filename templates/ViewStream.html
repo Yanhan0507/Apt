@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
     <title>Connexus: Create a stream</title>
 
     <!--Dropzone CSS-->
@@ -11,6 +11,8 @@
     <!-- Bootstrap core CSS -->
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/jumbotron.css" rel="stylesheet">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//blueimp.github.io/Gallery/css/blueimp-gallery.min.css">
     <link rel="stylesheet" href="/css/bootstrap-image-gallery.css">
     <link rel="stylesheet" href="/css/demo.css">
 
@@ -64,6 +66,41 @@
         <a href="/viewStream?geo_view=true&stream_id={{ stream_id }}">Geo View</a>
     </div>
     <div>
+
+{#        <table>#}
+{#            <tr>#}
+{#                <td align = "center" valign="center">#}
+{#                    <a href = "http://www.menucool.com/slider/jsImgSlider/images/image-slider-2.jpg" data-gallery>#}
+{#                    <img src="http://www.menucool.com/slider/jsImgSlider/images/image-slider-2.jpg" height = "200" width = "300">#}
+{##}
+{#                        </a>#}
+{##}
+{##}
+{#                </td>#}
+{##}
+{#                <td align = "center" valign="center">#}
+{#                    <a href = "http://www.keenthemes.com/preview/metronic/theme/assets/global/plugins/jcrop/demos/demo_files/image1.jpg" data-gallery>#}
+{#                    <img src="http://www.keenthemes.com/preview/metronic/theme/assets/global/plugins/jcrop/demos/demo_files/image1.jpg" height = "200" width = "300">#}
+{#                    </img>#}
+{#                    </a>#}
+{#                </td>#}
+{#                <td align = "center" valign="center">#}
+{#                    <a href = "http://www.keenthemes.com/preview/metronic/theme/assets/global/plugins/jcrop/demos/demo_files/image1.jpg" data-gallery>#}
+{#                    <img src="http://www.keenthemes.com/preview/metronic/theme/assets/global/plugins/jcrop/demos/demo_files/image1.jpg" height = "200" width = "300">#}
+{#                    </img>#}
+{#                    </a>#}
+{#                </td>#}
+{#            </tr>#}
+{##}
+{#            <tr>#}
+{#                <td align = "center" valign="center">#}
+{#                   <a href = "http://www.keenthemes.com/preview/metronic/theme/assets/global/plugins/jcrop/demos/demo_files/image1.jpg" data-gallery>#}
+{#                    <img src="http://www.keenthemes.com/preview/metronic/theme/assets/global/plugins/jcrop/demos/demo_files/image1.jpg" height = "200" width = "300">#}
+{#                    </img>#}
+{#                    </a>#}
+{#                </td>#}
+{#            </tr>#}
+{#        </table>#}
         <table id = "pictures">
             <tbody>
             {% for i in range(blob_key_lst|length) %}
@@ -151,6 +188,7 @@
     <br>
 
 <script src="/jquery.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 <script src="//blueimp.github.io/Gallery/js/jquery.blueimp-gallery.min.js"></script>
 <script src="js/bootstrap-image-gallery.js"></script>
