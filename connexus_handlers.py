@@ -146,10 +146,12 @@ class ViewStreamHandler(HTTPRequestHandler):
         if cur_user:
             url = users.create_logout_url(self.request.uri)
             stream_id = self.request.get(IDENTIFIER_STREAM_ID)
-            img_req_idx_lst = '0,1,2'    # default img idx lst
+            img_req_page = self.request.get(IDENTIFIER_IMG_REQ_PAGE)
+            if not img_req_page:
+                img_req_page = '0'    # default img idx lst
 
             status, result = self.callService('stream', 'view', stream_id=stream_id,
-                                              image_req_idx_lst=img_req_idx_lst)
+                                              img_req_page=img_req_page)
 
             # Subscription logic
             status, sub_result = self.callService('stream', 'subscribe', stream_id=stream_id,
@@ -175,6 +177,9 @@ class ViewStreamHandler(HTTPRequestHandler):
                 IDENTIFIER_BLOBKEY_LIST: result[IDENTIFIER_BLOBKEY_LIST],
                 IDENTIFIER_SUBSCRIPTION_OPTION: sub_result[IDENTIFIER_SUBSCRIPTION_OPTION],
                 IDENTIFIER_SUBSCRIPTION_URL: sub_result[IDENTIFIER_SUBSCRIPTION_URL],
+                # prev/next page indexes
+                IDENTIFIER_NEXT_PG_IDX: result[IDENTIFIER_NEXT_PG_IDX],
+                IDENTIFIER_PREV_PG_IDX: result[IDENTIFIER_PREV_PG_IDX],
 
                 IDENTIFIER_UPLOAD_URL: upload_url
             }

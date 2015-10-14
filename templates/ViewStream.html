@@ -91,7 +91,13 @@
             {% endfor %}
             </tbody>
         </table>
+        {% if (prev_page_idx) >=0 %}
+        <a href = "/viewStream?stream_id={{stream_id}}&img_req_page={{next_page_idx}}" class="btn btn-primary btn-xs">prev</a>
+        {% endif %}
 
+        {% if (next_page_idx) >=0 %}
+        <a href = "/viewStream?stream_id={{stream_id}}&img_req_page={{next_page_idx}}" class="btn btn-primary btn-xs">next</a>
+        {% endif %}
     </div>
 <br>
 

@@ -40,8 +40,8 @@ class ViewStreamService(ServiceHandler):
     def post(self):
         req_json = json.loads(self.request.body)
         stream_id = req_json[IDENTIFIER_STREAM_ID]
-        req_idx_lst = req_json[IDENTIFIER_IMG_IDX_REQ_LIST].split(',')
-        print 'ViewStreamService >> get stream id: ', stream_id, ', image_req_idx_lst:', req_idx_lst
+        img_req_page = req_json[IDENTIFIER_IMG_REQ_PAGE]
+        print 'ViewStreamService >> get stream id: ', stream_id, ', img_req_page:', img_req_page
         stream_obj = Stream()
         stream = stream_obj.get_stream(stream_id)
 
@@ -54,14 +54,15 @@ class ViewStreamService(ServiceHandler):
         image_res_idx_lst = []  # saving img indexes. There might be inconsistency between the requested list and this one
         blob_key_lst = []
 
-        if not req_idx_lst:
+        if not img_req_page:
             #   if the index list turns out to be empty
-            return self.respond(error="ViewStreamService >> index list is empty")
+            return self.respond(error="ViewStreamService >> page index is empty")
 
-        for idx in req_idx_lst:
-            if not idx:
-                break
-            idx = int(idx)
+        img_req_page = int(img_req_page)
+
+        idx_lst = range(img_req_page*3, (img_req_page+1)*3, 1)
+
+        for idx in idx_lst:
             if idx >= len(stream.image_id_lst):
                 continue
             image_id_lst.append(stream.image_id_lst[idx])
@@ -71,8 +72,19 @@ class ViewStreamService(ServiceHandler):
         #   increase view count
         stream.increase_view_cnt()
 
+        # next/prev page indexes
+        if (img_req_page+1)*3 < len(stream.image_id_lst):
+            next_pg_idx = img_req_page+1
+        else:
+            next_pg_idx = -1
+        if img_req_page > 0:
+            prev_pg_idx = img_req_page-1
+        else:
+            prev_pg_idx = -1
+
         self.respond(stream_owner=stream.user_id, image_res_idx_lst=image_res_idx_lst, blob_key_lst=blob_key_lst,
                      image_id_lst=image_id_lst, stream_name=stream.stream_name, stream_description=stream.description,
+                     next_page_idx=next_pg_idx, prev_page_idx=prev_pg_idx,
                      status="Retrieved image indexes %r from stream %r" % (image_id_lst, stream_id))
 
 
