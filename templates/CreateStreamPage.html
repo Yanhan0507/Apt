@@ -41,21 +41,23 @@
     </nav>
 
     <!--Create a new Stream Box-->
-    <div class="jumbotron">
-        <div class="container">
-            <form action="/createStream"  enctype="multipart/form-data" method="post">
-                <label>Cover Url:</label>
-                <div> <input type="text" id="cover_url" name="cover_url"> </div>
-                <label>Stream Name:</label>
-                <div><input type="text" name="stream_name"/></div>
-                <label> Description </label>
-                <div><textarea name="stream_description" rows="3" cols="60"></textarea></div>
-                <div>
-                    <button class="btn btn-default" type="submit">Create Stream</button>
-                </div>
-           </form>
+    <br>
+        <div class="jumbotron">
+            <div class="container">
+                <form  action="/createStream"  enctype="multipart/form-data" method="post">
+                    <label>Cover Url:</label>
+                    <div> <input type="text" id="cover_url" name="cover_url"> </div>
+                    <label>Stream Name:</label>
+                    <div><input type="text" name="stream_name"/></div>
+                    <label> Description </label>
+                    <div><textarea name="stream_description" rows="3" cols="60"></textarea></div>
+                    <div>
+                        <button class="btn btn-default" type="submit">Create Stream</button>
+                    </div>
+               </form>
+            </div>
         </div>
-    </div>
+
 
 </body>
 </html>
