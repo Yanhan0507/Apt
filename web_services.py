@@ -4,8 +4,11 @@ from google.appengine.ext.webapp import blobstore_handlers
 from google.appengine.ext import blobstore
 from Model import Image, Stream, Subscription, ReportSendingRate
 import uuid
+import random
+from datetime import datetime
 import urllib
 from google.appengine.ext import ndb
+from google.appengine.api.images import get_serving_url
 
 #   import the constants
 from Constants import *
@@ -173,10 +176,15 @@ class UploadImageService(blobstore_handlers.BlobstoreUploadHandler):
             # upload = self.get_uploads()[0]
             image_id = uuid.uuid4()
             print "UploadImageService >> Upload new image with blob_key: " + str(upload.key())
+
+            # Generate a random location - Phase II requirement
+            rand_loc = ndb.GeoPt(random.uniform(-90, 90), random.uniform(0, 90))
+
             user_image = Image(user_id=user_id,
                                img_id=str(image_id),
                                content=description,
-                               blob_key=upload.key())
+                               blob_key=upload.key(),
+                               location=rand_loc)
             # stream_lst = Stream.query(Stream.user_id == user_id, Stream.stream_id == stream_id).fetch()
             # cur_stream = stream_lst[0]
             current_stream = Stream().get_stream(stream_id)
@@ -208,7 +216,7 @@ class StreamQueryService(ServiceHandler):
             dumpablelist = [Stream.get_stream(stream_id).dumpStream()
                             for stream_id in sid_list]
 
-            self.respond(user_streams_list=dumpablelist, status="Success")
+            self.respond(user_streams_list=dumpablelist, status="success")
 
         else:
             print 'StreamQueryService >> checking all streams subscribed by user[', user_id, ']'
@@ -222,4 +230,43 @@ class StreamQueryService(ServiceHandler):
             dumpablelist = [Stream.get_stream(stream_id).dumpStream()
                             for stream_id in subscribed_stream_ids]
 
-            self.respond(user_sub_streams_list=dumpablelist, status="Success")
+            self.respond(user_sub_streams_list=dumpablelist, status="success")
+
+
+# Service for getting a list of images with GeoLocations, and content(img divs)
+# Service Address: /ws/stream/marker_query
+# Request Fields: IDENTIFIER_STREAM_ID
+class MarkersQueryService(ServiceHandler):
+    def get(self):
+
+        # req_json = json.loads(self.request.body)
+        # stream_id = req_json[IDENTIFIER_STREAM_ID]
+
+        stream_id = self.request.get(IDENTIFIER_STREAM_ID)
+
+        #date_format:
+        # query_begin_date = req_json['query_begin_date']
+        # query_end_date = req_json['query_end_date']
+
+        query_begin_date = self.request.get(QUERY_BEGIN_DATE)
+        query_end_date = self.request.get(QUERY_END_DATE)
+
+        begin_date = datetime.strptime(query_begin_date, '%Y-%m-%dT%H:%M:%S.%fZ')
+        end_date = datetime.strptime(query_end_date, '%Y-%m-%dT%H:%M:%S.%fZ')
+
+        stream = Stream.get_stream(stream_id)
+        response = {}
+        markers_lst = list()
+        if not stream:
+            response['error'] = "Failed to find stream(" + stream_id+")."
+            self.respond(**response)
+        else:
+            for image_id in stream.image_id_lst:
+                image = Image.get_image(image_id)
+                if begin_date <= image.date <= end_date:
+                    content = '<img src="'+get_serving_url(image.blob_key, size=100)+'">'
+                    marker = {"latitude": image.location.lat, "longitude": image.location.lon, "content":content}
+                    # marker = {KEYWORD_MARKER_LOC: image.location,
+                    #           KEYWORD_MARKER_CONTENT: "<img src=\"" + get_serving_url(image.blob_key, size=100)+"\"\\>"}
+                    markers_lst.append(marker)
+            self.respond(markers=markers_lst, status="success")

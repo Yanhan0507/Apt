@@ -5,13 +5,14 @@
     <title>Connexus: Create a stream</title>
 
     <!-- Bootstrap core CSS -->
-    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/bootstrap.min.css" >
+    <link rel="stylesheet" href="/css/jquery-ui.min.css" >
     <!--<link href="/css/jumbotron.css" rel="stylesheet">-->
 
 </head>
 <body>
     <div class="wrapper">
-        <nav class="navbar navbar-default" role="navigation">
+        <nav class="navbar navbar-inverse" role="navigation">
             <div class="container-fluid">
                 <div class="navbar-header">
                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
@@ -74,19 +75,21 @@
 
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script>
 <script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/jquery-ui.min.js"></script>
 <script type="text/javascript" src="js/jquery.ui.map.js"></script>
 <script type="text/javascript" src="js/markerclusterer.min.js"></script>
+<script type="text/javascript" src="js/jQDateRangeSlider-min.js"></script>
 <script type="text/javascript">
+    $('#about').load('about');
     var $map = $('#map_canvas');
     var my_map;
     var marker_cluster;
-    $map.gmap({'zoom': 2, 'disableDefaultUI':true})
-            .bind('init', function(evt, map) {
+    $map.gmap({'zoom': 2, 'disableDefaultUI':true}).bind('init', function(evt, map) {
         my_map = map;
-        var $ajax = $.getJSON('geo_data', {
-                        name: 'Flags Colored',
-                        start: query_begin_date.toISOString(),
-                        end: query_end_date.toISOString()
+        var $ajax = $.getJSON('/ws/stream/marker_query', {
+                        stream_id: "{{ stream_id }}",
+                        query_begin_date: query_begin_date.toISOString(),
+                        query_end_date: query_end_date.toISOString()
                     },
                     function(data) {
                         $.each( data.markers, function(i, marker) {
@@ -104,7 +107,6 @@
             $map.gmap('set', 'MarkerClusterer', marker_cluster);
         });
     });
-
     var query_begin_date = null;
     var query_end_date = null;
     var timer = null;
@@ -126,7 +128,65 @@
         timer = null;
     }
 
+    function handler() {
+        clear_timer();
+        marker_cluster.clearMarkers();
+        $map.gmap('clear', 'markers');
+        load_geo_data(my_map);
+    }
 
+    function load_geo_data(my_map) {
+        var $ajax = $.getJSON('/ws/stream/marker_query', {
+                        stream_id: "{{ stream_id }}",
+                        query_begin_date: query_begin_date.toISOString(),
+                        query_end_date: query_end_date.toISOString()
+                    },
+                    function(data) {
+                        $.each( data.markers, function(i, marker) {
+                            $map.gmap('addMarker', {
+                                'position': new google.maps.LatLng(marker.latitude, marker.longitude)
+                            }).mouseout(function() {
+                                $map.gmap('closeInfoWindow');
+                            }).mouseover(function() {
+                                $map.gmap('openInfoWindow', { 'content': marker.content }, this);
+                            });
+                        });
+                    });
+        $ajax.done(function() {
+            marker_cluster = new MarkerClusterer(my_map, $map.gmap('get', 'markers'))
+            $map.gmap('set', 'MarkerClusterer', marker_cluster);
+        });
+    }
+
+    function formatDate(date) {
+        return $.datepicker.formatDate('MM dd, yy', date);
+    }
+
+    function setRangeLabels(low, high) {
+        var prev_year = new Date(); // Today
+        prev_year.setYear(prev_year.getFullYear() - 1);
+        var lowDate = new Date(prev_year);
+        lowDate.setDate(prev_year.getDate() + low);
+        var highDate = new Date(prev_year);
+        highDate.setDate(prev_year.getDate() + high);
+        var label = formatDate(lowDate) + " to " + formatDate(highDate);
+        set_query_date_range(lowDate, highDate);
+        $("#geoDateRateDisplay").html(label);
+    }
+
+    $("#slider-range").slider({
+        range: true,
+        min: 0,
+        max: 365,
+        values: [0, 365],
+        slide: function (event, ui) {
+            setRangeLabels(ui.values[0], ui.values[1]);
+            restart_timer();
+        }
+    });
+    setRangeLabels(
+        $("#slider-range").slider("values", 0),
+        $("#slider-range").slider("values", 1)
+    );
 </script>
-
 </html>

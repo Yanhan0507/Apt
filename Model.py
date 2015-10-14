@@ -7,6 +7,13 @@ class Image(ndb.Model):
     content = ndb.TextProperty()
     blob_key = ndb.BlobKeyProperty()
     date = ndb.DateTimeProperty(auto_now_add=True)
+    location = ndb.GeoPtProperty()
+
+    @classmethod
+    def get_image(self, img_id):
+        image = Image.query(Image.img_id == img_id).fetch()
+        #   return the stream if the stream list is not empty
+        return image[0] if image else image
 
 
 class Stream(ndb.Model):
@@ -41,9 +48,7 @@ class Stream(ndb.Model):
             self.blob_key_lst.remove(image.blob_key)
             # print "size of blobkey after: " + str(len(self.image_id_lst))
             key = image.put()
-            # print "get1: " + str(key.get())
             key.delete()
-            # print "get2: " + str(key.get())
             self.put()
 
     def deleteStream(self):

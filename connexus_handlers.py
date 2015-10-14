@@ -524,8 +524,8 @@ app = webapp2.WSGIApplication([
     ('/ws/stream/upload_image', UploadImageService),
     ('/ws/stream/create', CreateStreamService),
     ('/ws/stream/query', StreamQueryService),
-    ('/ws/stream/remove_image', RemoveImageService)
-
+    ('/ws/stream/remove_image', RemoveImageService),
+    ('/ws/stream/marker_query', MarkersQueryService)
     ]
 
 
