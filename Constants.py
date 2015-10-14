@@ -3,8 +3,8 @@ import jinja2
 __author__ = 'ChenguangLiu'
 
 # DEPLOYMENT CONFIGURATIONS
-# SERVICE_URL = 'http://localhost:8080' #local
-SERVICE_URL = 'http://ee382v-apt-connexus.appspot.com/'
+SERVICE_URL = 'http://localhost:8080' #local
+# SERVICE_URL = 'http://ee382v-apt-connexus.appspot.com/'
 APP_ID = 'ee382v-apt-connexus'
 MAILBOX_SURFIX = '.appspotmail.com'
 REPORT_SENDER_NAME = 'trendingStreams'
