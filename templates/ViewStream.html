@@ -81,8 +81,8 @@
 
     <div class = "container table-left">
         <div>
-            <h2> Welcome to {{stream_name}} </h2>
-            <p4> Description: {{stream_description}}</p4>
+            <h1> Welcome to {{stream_name}}! </h1>
+            <p3> <b>Description:</b> {{stream_description}}</p3>
         </div>
 
 
@@ -97,9 +97,13 @@
 
 
     <br>
-      <br>
-      <br>
-      <br>
+    <br>
+    <br>
+    <br>
+    <br>
+
+
+
     <div>
         <div class = "col-lg-12">
             <h1 class = "page-header"> View All Streams </h1>
@@ -108,7 +112,7 @@
          {% for i in range(blob_key_lst|length) %}
             <div class="col-lg-3 col-md-4 col-xs-6 thumb">
                   <a href = "/view_photo/{{ blob_key_lst[i] }}"  data-gallery>
-                            <img src="/view_photo/{{ blob_key_lst[i] }}" height = "200" width = "300">
+                            <img class="img-rounded" alt="Cinque Terre" src="/view_photo/{{ blob_key_lst[i] }}" height = "200" width = "300">
                              </img>
                         </a>
                             {% if user.user_id() == stream_owner %}
