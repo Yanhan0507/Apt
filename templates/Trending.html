@@ -39,21 +39,11 @@
       </div>
     </nav>
 
-    <div>
-        <h3> Top 3 Trending Streams </h3>
-        <table id="Trending streams" cellpadding="5">
-                {% for stream in trending_stream_lst %}
-                <td align = "center" valign= "center">
-                  <a href="/viewStream?stream_id={{ stream.stream_id }}">
-                      {% if stream.cover_url %}
-                          <img src="{{stream.cover_url}}"  style="width:300px;height:200px;">  </img>
-                      {% endif %}
-                      <h4>{{ stream.stream_name }}</h4>
-                      <h5> Views in the past hour: {{ stream.views_cnt}} (total:{{ stream.total_views_cnt}})</h5>
-                  </a>
-                </td>
-                {% endfor %}
-                <td>
+
+    <br>
+    <br>
+    <br>
+               <div class = "left-table">
                     <!--Report sending setting-->
                     <form action="updateReportSendingRate" method="get">
                         <input type="radio" name="sending_rate" value="0">No reports<br>
@@ -62,12 +52,61 @@
                         <input type="radio" name="sending_rate" value="3">Every day<br>
                         <input type="submit" value="Update rate"/>
                     </form>
+               </div>
+
+
+
+    <div class = "container">
+        <h2> Top 3 Trending Streams </h2>
+        <table id="Trending streams" cellpadding="5">
+                {% for stream in trending_stream_lst %}
+                <td align = "center" valign= "center">
+                  <a href="/viewStream?stream_id={{ stream.stream_id }}">
+                      {% if stream.cover_url %}
+                          <img  class="img-circle" alt="Cinque Terre" width="304" height="236" src="{{stream.cover_url}}"  style="width:300px;height:200px;">  </img>
+                      {% endif %}
+                      <h4>{{ stream.stream_name }}</h4>
+                      <h5> Views in the past hour: {{ stream.views_cnt}} (total:{{ stream.total_views_cnt}})</h5>
+                  </a>
                 </td>
+                {% endfor %}
+
             </tr>
 
         </table>
     </div>
+    <br>
+    <br>
+    <br>
 
+{#    <div class = "container">#}
+{#        <div class = "col-lg-12">#}
+{#            <h1 class = "page-header"> Top Three Trending Streams </h1>#}
+{#        </div>#}
+{##}
+{#         {% for stream in trending_stream_lst %}#}
+{#             <div class="col-lg-3 col-md-4 col-xs-6 thumb">#}
+{#                  <a href="/viewStream?stream_id={{ stream.stream_id }}">#}
+{#                      {% if stream.cover_url %}#}
+{#                          <img src="{{stream.cover_url}}"  style="width:300px;height:200px;">  </img>#}
+{#                      {% endif %}#}
+{#                      <h4>{{ stream.stream_name }}</h4>#}
+{#                      <h5> Views in the past hour: {{ stream.views_cnt}} (total:{{ stream.total_views_cnt}})</h5>#}
+{#                  </a>#}
+{#             </div>#}
+{#         {% endfor %}#}
+{#                <div class = "container">#}
+{#                    <!--Report sending setting-->#}
+{#                    <form action="updateReportSendingRate" method="get">#}
+{#                        <input type="radio" name="sending_rate" value="0">No reports<br>#}
+{#                        <input type="radio" name="sending_rate" value="1">Every 5 minutes<br>#}
+{#                        <input type="radio" name="sending_rate" value="2">Every 1 hour<br>#}
+{#                        <input type="radio" name="sending_rate" value="3">Every day<br>#}
+{#                        <input type="submit" value="Update rate"/>#}
+{#                    </form>#}
+{#                </div>#}
+{##}
+{#    </div>#}
 
 </body>
 </html>

@@ -53,44 +53,86 @@
       </div>
     </nav>
 
-    <br>
-    <br>
-    <br>
-    <div>
-        <h2> Welcome to {{stream_name}} </h2>
-        <p4> Description: {{stream_description}}</p4>
-    </div>
-    <br>
-    <div>
-        <a href="{{ subscribe_url }}">  {{ subscribe_option }} </a>
-        <a href="/viewStream?geo_view=true&stream_id={{ stream_id }}">Geo View</a>
-    </div>
-    <div>
 
-        <table>
+        <div class = "mid-table">
+        {% if user.user_id() == stream_owner %}
+            <div id="dropzone">
+                <!--<form id = "photo_upload" action = "{{upload_url}}" method="POST"-->
+                      <!--enctype="multipart/form-data" >-->
+                <!--<h4> Add an Image </h4>-->
+                    <!--<input type = "hidden" name = "stream_id" value = "{{stream_id}}">-->
+                    <!--<label> File Name </label>-->
+                    <!--<input type="file" name="photo_file">-->
+                    <!--<input type = "hidden" name = "stream_id" value = "{{stream_id}}">-->
+                    <!--&lt;!&ndash;<input type="file" name="photo" size="25" />&ndash;&gt;-->
+                    <!--<input type="submit" name="submit" value="Submit" />-->
+                <!--</form>-->
 
-        </table>
-        <table id = "pictures">
-            <tbody>
-            {% for i in range(blob_key_lst|length) %}
-                {% if i%3 == 0 %}
-                <tr>
-                {% endif %}
-                    <td align = "center" valign="center">
-                        <a href = "/view_photo/{{ blob_key_lst[i] }}"  data-gallery>
+                <form action="{{ upload_url }}" class="dropzone needsclick dz-clickable" id="myDropzone"
+                      method="POST" enctype="multipart/form-data">
+                    <input type = "hidden" name = "stream_id" value = "{{ stream_id }}">
+                    <input type = "hidden" name = "user_id" value = "{{ user.user_id() }}">
+                </form>
+                <input type="button" value="Submit" id="submit_button">
+
+            </div>
+        {% endif %}
+    </div>
+
+    <div class = "container table-left">
+        <div>
+            <h2> Welcome to {{stream_name}} </h2>
+            <p4> Description: {{stream_description}}</p4>
+        </div>
+
+
+
+        <div >
+            <a href="{{ subscribe_url }}">  {{ subscribe_option }} </a>
+            <a href="/viewStream?geo_view=true&stream_id={{ stream_id }}">Geo View</a>
+        </div>
+    </div>
+
+
+
+
+    <br>
+      <br>
+      <br>
+      <br>
+    <div>
+        <div class = "col-lg-12">
+            <h1 class = "page-header"> View All Streams </h1>
+        </div>
+
+         {% for i in range(blob_key_lst|length) %}
+            <div class="col-lg-3 col-md-4 col-xs-6 thumb">
+                  <a href = "/view_photo/{{ blob_key_lst[i] }}"  data-gallery>
                             <img src="/view_photo/{{ blob_key_lst[i] }}" height = "200" width = "300">
                              </img>
                         </a>
                             {% if user.user_id() == stream_owner %}
                                      <div align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></div>
                             {% endif %}
-                    </td>
-                {% if i%3 == 2 %}
-                </tr>
-                {% endif %}
-            {% endfor %}
-            </tbody>
-        </table>
+             </div>
+         {% endfor %}
+{#           {% for i in range(blob_key_lst|length) %}#}
+{#                {% if i%3 == 0 %}#}
+{#                <tr>#}
+{#                {% endif %}#}
+{#                    <td align = "center" valign="center">#}
+{#                        <a href = "/view_photo/{{ blob_key_lst[i] }}"  data-gallery>#}
+{#                            <img src="/view_photo/{{ blob_key_lst[i] }}" height = "200" width = "300">#}
+{#                             </img>#}
+{#                        </a>#}
+{#                            {% if user.user_id() == stream_owner %}#}
+{#                                     <div align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></div>#}
+{#                            {% endif %}#}
+{#                    </td>#}
+{#                {% if i%3 == 2 %}#}
+{#                </tr>#}
+{#                {% endif %}#}
+{#            {% endfor %}#}
 
         {% if (prev_page_idx) >=0 %}
         <a href = "/viewStream?stream_id={{stream_id}}&img_req_page={{next_page_idx}}" class="btn btn-primary btn-xs">prev</a>
@@ -100,8 +142,6 @@
         <a href = "/viewStream?stream_id={{stream_id}}&img_req_page={{next_page_idx}}" class="btn btn-primary btn-xs">next</a>
         {% endif %}
     </div>
-<br>
-
     <!-- The Bootstrap Image Gallery lightbox, should be a child element of the document body -->
     <div id="blueimp-gallery" class="blueimp-gallery">
         <!-- The container for the modal slides -->
@@ -136,32 +176,8 @@
             </div>
         </div>
     </div>
-
-    <div class = "mid-table">
-        {% if user.user_id() == stream_owner %}
-            <div id="dropzone">
-                <!--<form id = "photo_upload" action = "{{upload_url}}" method="POST"-->
-                      <!--enctype="multipart/form-data" >-->
-                <!--<h4> Add an Image </h4>-->
-                    <!--<input type = "hidden" name = "stream_id" value = "{{stream_id}}">-->
-                    <!--<label> File Name </label>-->
-                    <!--<input type="file" name="photo_file">-->
-                    <!--<input type = "hidden" name = "stream_id" value = "{{stream_id}}">-->
-                    <!--&lt;!&ndash;<input type="file" name="photo" size="25" />&ndash;&gt;-->
-                    <!--<input type="submit" name="submit" value="Submit" />-->
-                <!--</form>-->
-
-                <form action="{{ upload_url }}" class="dropzone needsclick dz-clickable" id="myDropzone"
-                      method="POST" enctype="multipart/form-data">
-                    <input type = "hidden" name = "stream_id" value = "{{ stream_id }}">
-                    <input type = "hidden" name = "user_id" value = "{{ user.user_id() }}">
-                </form>
-                <input type="button" value="Submit" id="submit_button">
-
-            </div>
-        {% endif %}
-    </div>
-    <br>
+<br>
+<br>
 
 -<script src="/js/jquery.min.js"></script>
 -<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>

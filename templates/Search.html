@@ -88,27 +88,28 @@
     </nav>
 
 
-    <div>
+    <div class = "container">
         <form action = "/search/result" method="post">
             <br>
             <br>
             <br>
-            <h3>   Search Streams </h3>
-            <h4>   Tips </h4>
+            <h3 class="text-primary">   Search Streams </h3>
+            <h4  class="text-info">   Tips: </h4>
             <ul>
-                 <li> Search by stream name or content </li>
-                 <li> Provide as much as information as you can</li>
+                 <li  class="text-info"> Search by stream name or content </li>
+                 <li  class="text-info"> Provide as much as information as you can</li>
             </ul>
             <div>
                 <input id = "autoBox" name = "keyWord" size = "40">
             </div>
             <div>
-                <p>  search by title or content </p>
+                <p  class="text-info">  search by title or content </p>
                 <select name = "type">
                       <option value="title">Search by title</option>
                       <option value="content">Search by content</option>
                 </select>
             </div>
+            <br>
             <div>
                 <input type = "submit" value = "Search Stream">
             </div>
