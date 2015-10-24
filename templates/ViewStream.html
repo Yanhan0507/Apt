@@ -54,7 +54,49 @@
     </nav>
 
 
-        <div class = "mid-table">
+    <div class="container">
+        <div class = "container" style="height: 150px;">
+            <div>
+                <h1> Welcome to {{stream_name}}! </h1>
+                <p3> <b>Description:</b> {{stream_description}}</p3>
+            </div>
+
+            <div >
+                <a href="{{ subscribe_url }}">  {{ subscribe_option }} </a>
+                <a href="/viewStream?geo_view=true&stream_id={{ stream_id }}">Geo View</a>
+            </div>
+        </div>
+    
+
+
+    <div style="height: 300px;">
+        <!--<div class = "col-lg-12">-->
+            <!--<h1 class = "page-header"> View All Streams </h1>-->
+        <!--</div>-->
+
+         {% for i in range(blob_key_lst|length) %}
+            <div class="col-lg-3 col-md-4 col-xs-6 thumb">
+                  <a href = "/view_photo/{{ blob_key_lst[i] }}"  data-gallery>
+                            <img class="img-rounded" alt="Cinque Terre" src="/view_photo/{{ blob_key_lst[i] }}" height = "200" width = "300">
+                             </img>
+                        </a>
+                            {% if user.user_id() == stream_owner %}
+                                     <div align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></div>
+                            {% endif %}
+             </div>
+         {% endfor %}
+
+        {% if (prev_page_idx) >=0 %}
+        <a href = "/viewStream?stream_id={{stream_id}}&img_req_page={{next_page_idx}}" class="btn btn-primary btn-xs">prev</a>
+        {% endif %}
+
+        {% if (next_page_idx) >=0 %}
+        <a href = "/viewStream?stream_id={{stream_id}}&img_req_page={{next_page_idx}}" class="btn btn-primary btn-xs">next</a>
+        {% endif %}
+    </div>
+
+
+    <div class = "panel panel-default">
         {% if user.user_id() == stream_owner %}
             <div id="dropzone">
                 <!--<form id = "photo_upload" action = "{{upload_url}}" method="POST"-->
@@ -78,74 +120,8 @@
             </div>
         {% endif %}
     </div>
+</div>  <!-- wrapper -->
 
-    <div class = "container table-left">
-        <div>
-            <h1> Welcome to {{stream_name}}! </h1>
-            <p3> <b>Description:</b> {{stream_description}}</p3>
-        </div>
-
-
-
-        <div >
-            <a href="{{ subscribe_url }}">  {{ subscribe_option }} </a>
-            <a href="/viewStream?geo_view=true&stream_id={{ stream_id }}">Geo View</a>
-        </div>
-    </div>
-
-
-
-
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-
-
-
-    <div>
-        <div class = "col-lg-12">
-            <h1 class = "page-header"> View All Streams </h1>
-        </div>
-
-         {% for i in range(blob_key_lst|length) %}
-            <div class="col-lg-3 col-md-4 col-xs-6 thumb">
-                  <a href = "/view_photo/{{ blob_key_lst[i] }}"  data-gallery>
-                            <img class="img-rounded" alt="Cinque Terre" src="/view_photo/{{ blob_key_lst[i] }}" height = "200" width = "300">
-                             </img>
-                        </a>
-                            {% if user.user_id() == stream_owner %}
-                                     <div align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></div>
-                            {% endif %}
-             </div>
-         {% endfor %}
-{#           {% for i in range(blob_key_lst|length) %}#}
-{#                {% if i%3 == 0 %}#}
-{#                <tr>#}
-{#                {% endif %}#}
-{#                    <td align = "center" valign="center">#}
-{#                        <a href = "/view_photo/{{ blob_key_lst[i] }}"  data-gallery>#}
-{#                            <img src="/view_photo/{{ blob_key_lst[i] }}" height = "200" width = "300">#}
-{#                             </img>#}
-{#                        </a>#}
-{#                            {% if user.user_id() == stream_owner %}#}
-{#                                     <div align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></div>#}
-{#                            {% endif %}#}
-{#                    </td>#}
-{#                {% if i%3 == 2 %}#}
-{#                </tr>#}
-{#                {% endif %}#}
-{#            {% endfor %}#}
-
-        {% if (prev_page_idx) >=0 %}
-        <a href = "/viewStream?stream_id={{stream_id}}&img_req_page={{next_page_idx}}" class="btn btn-primary btn-xs">prev</a>
-        {% endif %}
-
-        {% if (next_page_idx) >=0 %}
-        <a href = "/viewStream?stream_id={{stream_id}}&img_req_page={{next_page_idx}}" class="btn btn-primary btn-xs">next</a>
-        {% endif %}
-    </div>
     <!-- The Bootstrap Image Gallery lightbox, should be a child element of the document body -->
     <div id="blueimp-gallery" class="blueimp-gallery">
         <!-- The container for the modal slides -->
@@ -183,8 +159,8 @@
 <br>
 <br>
 
--<script src="/js/jquery.min.js"></script>
--<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="/js/jquery.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 <script src="//blueimp.github.io/Gallery/js/jquery.blueimp-gallery.min.js"></script>
 <script src="js/bootstrap-image-gallery.js"></script>

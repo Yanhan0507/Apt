@@ -251,14 +251,7 @@ class StreamQueryService(ServiceHandler):
 class MarkersQueryService(ServiceHandler):
     def get(self):
 
-        # req_json = json.loads(self.request.body)
-        # stream_id = req_json[IDENTIFIER_STREAM_ID]
-
         stream_id = self.request.get(IDENTIFIER_STREAM_ID)
-
-        #date_format:
-        # query_begin_date = req_json['query_begin_date']
-        # query_end_date = req_json['query_end_date']
 
         query_begin_date = self.request.get(QUERY_BEGIN_DATE)
         query_end_date = self.request.get(QUERY_END_DATE)
@@ -278,7 +271,5 @@ class MarkersQueryService(ServiceHandler):
                 if begin_date <= image.date <= end_date:
                     content = '<img src="'+get_serving_url(image.blob_key, size=100)+'">'
                     marker = {"latitude": image.location.lat, "longitude": image.location.lon, "content":content}
-                    # marker = {KEYWORD_MARKER_LOC: image.location,
-                    #           KEYWORD_MARKER_CONTENT: "<img src=\"" + get_serving_url(image.blob_key, size=100)+"\"\\>"}
                     markers_lst.append(marker)
             self.respond(markers=markers_lst, status="success")

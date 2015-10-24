@@ -256,15 +256,15 @@ class RemoveImageHandler(HTTPRequestHandler):
         self.redirect('/viewStream?'+'stream_id='+stream_id)
 
 
-class ViewPhotoHandler(blobstore_handlers.BlobstoreDownloadHandler):
-    def get(self, photo_key):
-        # print "key in handle: " + photo_key
-        if not blobstore.get(photo_key):
-            print "no photo-key"
-            self.error(404)
-        else:
-            print "photo_key: " + str(photo_key)
-            self.send_blob(photo_key)
+# class ViewPhotoHandler(blobstore_handlers.BlobstoreDownloadHandler):
+#     def get(self, photo_key):
+#         # print "key in handle: " + photo_key
+#         if not blobstore.get(photo_key):
+#             print "no photo-key"
+#             self.error(404)
+#         else:
+#             print "photo_key: " + str(photo_key)
+#             self.send_blob(photo_key)
 
 
 class deleteStream(HTTPRequestHandler):
@@ -509,7 +509,7 @@ app = webapp2.WSGIApplication([
     ('/deleteStream', deleteStream),
     ('/viewStream', ViewStreamHandler),
     ('/viewAllStream', viewAllStream),
-    ('/view_photo/([^/]+)?', ViewPhotoHandler),
+    # ('/view_photo/([^/]+)?', ViewPhotoHandler),
     # , ('/upload_photo', addImg)
     ('/stream/delete', RemoveImageHandler),
     ('/deleteStream/all', deleteStreamAll),
@@ -530,7 +530,8 @@ app = webapp2.WSGIApplication([
     ('/ws/stream/create', CreateStreamService),
     ('/ws/stream/query', StreamQueryService),
     ('/ws/stream/remove_image', RemoveImageService),
-    ('/ws/stream/marker_query', MarkersQueryService)
+    ('/ws/stream/marker_query', MarkersQueryService),
+    ('/view_photo/([^/]+)?', ViewImageService)
     ]
 
 
