@@ -80,7 +80,7 @@
                             <img class="img-rounded" alt="Cinque Terre" src="/view_photo/{{ blob_key_lst[i] }}" height = "200" width = "300">
                              </img>
                         </a>
-                            {% if user.user_id() == stream_owner %}
+                            {% if user.email() == stream_owner %}
                                      <div align="center"><a href="/stream/delete?photo_Key={{image_id_lst[i]}}&stream_id={{stream_id}}"> delete </a></div>
                             {% endif %}
              </div>
@@ -97,7 +97,7 @@
 
 
     <div class = "panel panel-default">
-        {% if user.user_id() == stream_owner %}
+        {% if user.email() == stream_owner %}
             <div id="dropzone">
                 <!--<form id = "photo_upload" action = "{{upload_url}}" method="POST"-->
                       <!--enctype="multipart/form-data" >-->
@@ -113,7 +113,7 @@
                 <form action="{{ upload_url }}" class="dropzone needsclick dz-clickable" id="myDropzone"
                       method="POST" enctype="multipart/form-data">
                     <input type = "hidden" name = "stream_id" value = "{{ stream_id }}">
-                    <input type = "hidden" name = "user_id" value = "{{ user.user_id() }}">
+                    <input type = "hidden" name = "user_email" value = "{{ user.email() }}">
                 </form>
                 <input type="button" value="Submit" id="submit_button">
 

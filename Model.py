@@ -3,7 +3,8 @@ from google.appengine.ext import ndb
 
 class Image(ndb.Model):
     img_id = ndb.StringProperty()
-    user_id = ndb.StringProperty()
+    # user_id = ndb.StringProperty()
+    user_email = ndb.StringProperty()
     content = ndb.TextProperty()
     blob_key = ndb.BlobKeyProperty()
     date = ndb.DateTimeProperty(auto_now_add=True)
@@ -17,7 +18,8 @@ class Image(ndb.Model):
 
 
 class Stream(ndb.Model):
-    user_id = ndb.StringProperty()
+    # user_id = ndb.StringProperty()
+    user_email = ndb.StringProperty()
     description = ndb.StringProperty()
     stream_name = ndb.StringProperty()
     stream_id = ndb.StringProperty()
@@ -87,7 +89,7 @@ class Stream(ndb.Model):
 #                           or the stream has been removed by the creator.
 
 class Subscription(ndb.Model):
-    user_id = ndb.StringProperty()
+    user_email = ndb.StringProperty()
     stream_id = ndb.StringProperty()
     subscribed_date = ndb.DateTimeProperty(auto_now_add=True)
 

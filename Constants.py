@@ -24,6 +24,7 @@ KEYWORD_BLOBKEY = 'blob_key'
 
 IDENTIFIER_CURRENT_USER = 'user'
 IDENTIFIER_CURRENT_USER_ID = 'user_id'
+IDENTIFIER_USER_EMAIL = 'user_email'
 IDENTIFIER_URL = 'url'
 IDENTIFIER_JSON_MSG = 'application/json'
 IDENTIFIER_STREAM_ID = 'stream_id'
@@ -58,5 +59,9 @@ QUERY_END_DATE = 'query_end_date'
 KEYWORD_MARKER_LOC = 'location'
 KEYWORD_MARKER_CONTENT = 'content'
 
+
+VIEW_ALL_START_INDEX = 'view_all_start_idx'
+NUM_STREAMS_PER_PAGE = 16
+IS_VIEW_ALL_SUBSCRIBED = 'is_view_all_subscribed'
 
 NROF_IMGS_PER_PAGE = 3

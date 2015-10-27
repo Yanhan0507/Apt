@@ -82,7 +82,7 @@ class ViewStreamService(ServiceHandler):
         else:
             prev_pg_idx = -1
 
-        self.respond(stream_owner=stream.user_id, image_res_idx_lst=image_res_idx_lst, blob_key_lst=blob_key_lst,
+        self.respond(stream_owner=stream.user_email, image_res_idx_lst=image_res_idx_lst, blob_key_lst=blob_key_lst,
                      image_id_lst=image_id_lst, stream_name=stream.stream_name, stream_description=stream.description,
                      next_page_idx=next_pg_idx, prev_page_idx=prev_pg_idx,
                      status="Retrieved image indexes %r from stream %r" % (image_id_lst, stream_id))
@@ -92,14 +92,14 @@ class ViewStreamService(ServiceHandler):
 class CreateStreamService(ServiceHandler):
     def post(self):
         req_json = json.loads(self.request.body)
-        user_id = req_json[IDENTIFIER_CURRENT_USER_ID]
+        user_email = req_json[IDENTIFIER_USER_EMAIL]
         stream_name = req_json[IDENTIFIER_STREAM_NAME]
         stream_id = uuid.uuid4()
         cover_url = req_json[IDENTIFIER_COVER_URL]
         description = req_json[IDENTIFIER_STREAM_DESC]
 
-        new_stream = Stream(parent=ndb.Key('Account', user_id),
-                            user_id=user_id,
+        new_stream = Stream(parent=ndb.Key('Account', user_email),
+                            user_email=user_email,
                             stream_id=str(stream_id),
                             stream_name=stream_name,
                             views_cnt=0,
@@ -119,52 +119,52 @@ class SubscriptionService(ServiceHandler):
     def post(self):
         req_json = json.loads(self.request.body)
         stream_id = req_json[IDENTIFIER_STREAM_ID]
-        current_user_id = req_json[IDENTIFIER_CURRENT_USER_ID]
-        print "SubscriptionService >> checking subscription stream_id: " + stream_id + ", user_id:" + current_user_id
-        sub_query = Subscription.query(Subscription.user_id == current_user_id, Subscription.stream_id == stream_id).fetch()
+        current_user_email = req_json[IDENTIFIER_USER_EMAIL]
+        print "SubscriptionService >> checking subscription stream_id: " + stream_id + ", user_email:" + current_user_email
+        sub_query = Subscription.query(Subscription.user_email == current_user_email, Subscription.stream_id == stream_id).fetch()
         if len(sub_query) != 0:
             # subscription exists
             subscribe_option = "Unsubscribe"
             subscribe_url = "/subscribe?stream_id="+stream_id+"&subscribe_bool=false"\
-                            + "&"+IDENTIFIER_CURRENT_USER_ID+"=" + current_user_id
+                            + "&"+IDENTIFIER_USER_EMAIL+"=" + current_user_email
         else:
             # subscription doesn't exist
             subscribe_option = "Subscribe"
             subscribe_url = "/subscribe?stream_id="+stream_id+"&subscribe_bool=true"\
-                            + "&"+IDENTIFIER_CURRENT_USER_ID+"=" + current_user_id
+                            + "&"+IDENTIFIER_USER_EMAIL+"=" + current_user_email
         self.respond(subscribe_option=subscribe_option, subscribe_url=subscribe_url, status="success")
 
 
 # Blobstore related services
 # ViewImageService
 class ViewImageService(blobstore_handlers.BlobstoreDownloadHandler):
-    def get(self):
-        blob_key = self.request.get(KEYWORD_BLOBKEY)
-        if not blobstore.get(blob_key):
+    def get(self, photo_key):
+        # blob_key = self.request.get(KEYWORD_BLOBKEY)
+        if not blobstore.get(photo_key):
             self.error(404)
         else:
-            self.send_blob(blob_key)
+            self.send_blob(photo_key)
 
 
 # RemoveImageService
 # Service Address: /ws/stream/remove_image
-# Request Fields: IDENTIFIER_CURRENT_USER_ID, IDENTIFIER_STREAM_ID, IDENTIFIER_IMAGEID
+# Request Fields: IDENTIFIER_USER_EMAIL, IDENTIFIER_STREAM_ID, IDENTIFIER_IMAGEID
 class RemoveImageService(ServiceHandler):
     def post(self):
         req_json = json.loads(self.request.body)
         stream_id = req_json[IDENTIFIER_STREAM_ID]
-        current_user_id = req_json[IDENTIFIER_CURRENT_USER_ID]
+        current_user_email = req_json[IDENTIFIER_USER_EMAIL]
         photo_key = req_json[IDENTIFIER_PHOTO_KEY]
 
         response = {}
         stream = Stream.get_stream(stream_id)
 
-        if not (stream_id and current_user_id and photo_key and stream):
-            response['error'] = "Failed to find photo_key (" + photo_key + ") for user (" + current_user_id \
+        if not (stream_id and current_user_email and photo_key and stream):
+            response['error'] = "Failed to find photo_key (" + photo_key + ") for user (" + current_user_email \
                                 + ") under stream(" + stream_id+")."
             self.respond(**response)
-        elif stream.user_id != current_user_id:
-            response['error'] = "Failed to remove image user (" + current_user_id \
+        elif stream.user_id != current_user_email:
+            response['error'] = "Failed to remove image user (" + current_user_email \
                                 + ") is not the owner of stream(" + stream_id+")."
             self.respond(**response)
         else:
@@ -177,7 +177,7 @@ class RemoveImageService(ServiceHandler):
 # Request Fields: IDENTIFIER_CURRENT_USER_ID, IDENTIFIER_STREAM_ID, IDENTIFIER_STREAM_DESC
 class UploadImageService(blobstore_handlers.BlobstoreUploadHandler):
     def post(self):
-        user_id = self.request.get(IDENTIFIER_CURRENT_USER_ID)
+        user_email = self.request.get(IDENTIFIER_USER_EMAIL)
         stream_id = self.request.get(IDENTIFIER_STREAM_ID)
         description = self.request.get(IDENTIFIER_STREAM_DESC)
 
@@ -192,7 +192,7 @@ class UploadImageService(blobstore_handlers.BlobstoreUploadHandler):
             # Generate a random location - Phase II requirement
             rand_loc = ndb.GeoPt(random.uniform(-90, 90), random.uniform(0, 90))
 
-            user_image = Image(user_id=user_id,
+            user_image = Image(user_email=user_email,
                                img_id=str(image_id),
                                content=description,
                                blob_key=upload.key(),
@@ -211,15 +211,15 @@ class UploadImageService(blobstore_handlers.BlobstoreUploadHandler):
 
 # Service for querying user's streams or his subscribed streams
 # Service Address: /ws/stream/query
-# Request Fields: IDENTIFIER_CURRENT_USER_ID(str), IDENTIFIER_CHECK_SUBSCRIPTION(boolean)
+# Request Fields: IDENTIFIER_USER_EMAIL(str), IDENTIFIER_CHECK_SUBSCRIPTION(boolean)
 class StreamQueryService(ServiceHandler):
     def post(self):
         req_json = json.loads(self.request.body)
-        user_id = req_json[IDENTIFIER_CURRENT_USER_ID]
+        user_email = req_json[IDENTIFIER_USER_EMAIL]
         is_check_subscription = req_json[IDENTIFIER_CHECK_SUBSCRIPTION]
         if not is_check_subscription:
-            print 'StreamQueryService >> checking all streams created by user[', user_id, ']'
-            user_streams_list = ndb.Query(ancestor=ndb.Key('Account', user_id)).fetch()
+            print 'StreamQueryService >> checking all streams created by user[', user_email, ']'
+            user_streams_list = ndb.Query(ancestor=ndb.Key('Account', user_email)).fetch()
             sorted_streams_list = sorted(user_streams_list, key=lambda stream: stream.last_add, reverse=True)
             sid_list = []
             for stream in sorted_streams_list:
@@ -231,8 +231,8 @@ class StreamQueryService(ServiceHandler):
             self.respond(user_streams_list=dumpablelist, status="success")
 
         else:
-            print 'StreamQueryService >> checking all streams subscribed by user[', user_id, ']'
-            subscribed_list = Subscription.query(Subscription.user_id == user_id).fetch()
+            print 'StreamQueryService >> checking all streams subscribed by user[', user_email, ']'
+            subscribed_list = Subscription.query(Subscription.user_email == user_email).fetch()
             subscribed_stream_ids = []
             for subscribed_item in subscribed_list:
                 sub_stream = Stream.query(Stream.stream_id == subscribed_item.stream_id).fetch()
@@ -277,7 +277,50 @@ class MarkersQueryService(ServiceHandler):
 
 # Service for getting a list of all streams
 # Service Address: /ws/stream/view_all
-# Request Fields: USER_EMAIL (For enabling Subscription)
-class ViewAllStreamsService(ServiceHandler):
+# Return: stream_id_lst, stream_name_lst , cover_img_url_list, startIdx
+# Request Fields: None
+class mViewAllStreamsService(ServiceHandler):
     def get(self):
-        pass
+        stream_id_lst=list()
+        stream_name_lst=list()
+        cover_img_url_list=list()
+        stream_lst=list()
+
+        is_view_all_subscribed = self.request.get(IS_VIEW_ALL_SUBSCRIBED)
+        usr_id = self.request.get(IDENTIFIER_USER_EMAIL)
+
+        if is_view_all_subscribed:
+            print 'mViewAllStreamsService:: getting subscribed streams list for user', usr_id
+
+            subscribed_list = Subscription.query(Subscription.user_email == usr_id).fetch()
+            for subscribed_item in subscribed_list:
+                stream_lst.append(Stream.get_stream(subscribed_item.stream_id))
+
+        else:
+            print 'mViewAllStreamsService:: getting all streams list'
+            stream_lst = Stream.query().fetch()
+
+        sorted_streams = sorted(stream_lst, key=lambda stream:stream.last_add, reverse=True)
+
+        nrof_streams = len(sorted_streams)
+
+        start_idx = self.request.get(VIEW_ALL_START_INDEX)
+        if not start_idx or (start_idx > nrof_streams):
+            start_idx = 0
+
+        last_idx = start_idx+NUM_STREAMS_PER_PAGE
+        if last_idx > nrof_streams:
+            last_idx = nrof_streams-1
+
+        for i in xrange(start_idx, last_idx+1):
+            stream = sorted_streams[i]
+            stream_id_lst.append(stream.stream_id)
+            stream_name_lst.append(stream.stream_name)
+            cover_img_url_list.append(stream.cover_url)
+
+        print "mViewAllStreamsService:: stream_id_lst:" + str(stream_id_lst) + " |||| stream_name_lst:" + \
+              str(stream_name_lst) + " |||| cover_img_url_list:" + str(cover_img_url_list) + " |||| last_idx:" + \
+              str(last_idx)
+
+        self.respond(stream_id_lst=stream_id_lst, stream_name_lst=stream_name_lst,
+                     cover_img_url_list=cover_img_url_list, last_idx=last_idx, status="success")

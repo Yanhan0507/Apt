@@ -86,13 +86,13 @@ class ManagePageHandler(HTTPRequestHandler):
             logout_linktext = 'Logout'
 
             # call service to get all streams
-            status, result = self.callService('stream', 'query', user_id=user.user_id(),
+            status, result = self.callService('stream', 'query', user_email=user.email(),
                                                          check_subscription=False)
 
             user_streams_list = result[IDENTIFIER_USER_STREAM_LIST]
 
             # get user subscriptions
-            status, result = self.callService('stream', 'query', user_id=user.user_id(),
+            status, result = self.callService('stream', 'query', user_email=user.email(),
                                                          check_subscription=True)
             user_sub_streams_list = result[IDENTIFIER_USER_SUB_STREAM_LIST]
 
@@ -129,12 +129,12 @@ class CreatePageHandler(HTTPRequestHandler):
 class CreateStream(HTTPRequestHandler):
     def post(self):
 
-        user_id = users.get_current_user().user_id()
+        user_email = users.get_current_user().email()
         stream_name = self.request.get(IDENTIFIER_STREAM_NAME)
         cover_url = self.request.get(IDENTIFIER_COVER_URL)
         stream_description = self.request.get(IDENTIFIER_STREAM_DESC)
 
-        self.callService('stream', 'create', user_id=user_id, stream_name=stream_name, cover_url=cover_url,
+        self.callService('stream', 'create', user_email=user_email, stream_name=stream_name, cover_url=cover_url,
                          stream_description=stream_description)
 
         self.redirect('/manage')
@@ -155,11 +155,11 @@ class ViewStreamHandler(HTTPRequestHandler):
 
             # Subscription logic
             status, sub_result = self.callService('stream', 'subscribe', stream_id=stream_id,
-                                                  user_id=cur_user.user_id())
+                                                  user_email=cur_user.email())
 
             # create photo upload url
             # it should redirect to the ViewStream page
-            if cur_user.user_id() == result[IDENTIFIER_STREAM_OWNER]:
+            if cur_user.email() == result[IDENTIFIER_STREAM_OWNER]:
                 # redirect = '/viewStream/?' + urllib.urlencode({ IDENTIFIER_STREAM_ID: stream_id })
                 upload_url = blobstore.create_upload_url('/ws/stream/upload_image')
                 print 'ViewStreamHandler >> generate upload url: ', upload_url
@@ -201,29 +201,29 @@ class ViewStreamHandler(HTTPRequestHandler):
 class SubscriptionHandler(HTTPRequestHandler):
     def get(self):
         stream_id = self.request.get(IDENTIFIER_STREAM_ID)
-        current_user_id = self.request.get(IDENTIFIER_CURRENT_USER_ID)
-        if current_user_id and stream_id:
+        user_email = self.request.get(IDENTIFIER_USER_EMAIL)
+        if user_email and stream_id:
             # check if the request is to subscribe or un-subscribe
             subscribe_bool = self.request.get('subscribe_bool') == 'true'
             if subscribe_bool:
                 # subscribing request
-                new_subscription_entry = Subscription(user_id=current_user_id, stream_id=stream_id)
+                new_subscription_entry = Subscription(user_email=user_email, stream_id=stream_id)
                 new_subscription_entry.put()
-                print 'SubscriptionHandler:: user' + current_user_id + ' subscribed to stream' + stream_id
+                print 'SubscriptionHandler:: user' + user_email + ' subscribed to stream' + stream_id
                 self.redirect('/manage')
             else:
                 # ub-subscribing request
                 # fetch the data entry of this subscription
                 subscription_entry = Subscription.query(Subscription.stream_id == stream_id,
-                                                        Subscription.user_id == current_user_id).fetch()
+                                                        Subscription.user_email == user_email).fetch()
                 if len(subscription_entry) != 0:
                     subscription_entry[0].deleteSubscription()
-                    print 'SubscriptionHandler:: user' + current_user_id + ' un-subscribed to stream' + stream_id
+                    print 'SubscriptionHandler:: user' + user_email + ' un-subscribed to stream' + stream_id
                     self.redirect('/manage')
                 else:
                     # no such subscription entry can be found
                     template_values = {
-                        'error_msg' : "no such subscription entry can be found. (userid=" + current_user_id
+                        'error_msg' : "no such subscription entry can be found. (userid=" + user_email
                                       + ", streamid=" + stream_id + ")"
                     }
                     self.render("Error.html", **template_values)
@@ -237,21 +237,13 @@ class SubscriptionHandler(HTTPRequestHandler):
 
 class RemoveImageHandler(HTTPRequestHandler):
     def get(self):
-        user_id = users.get_current_user().user_id()
+        user_email = users.get_current_user().email()
         photo_Key = self.request.get("photo_Key")
         stream_id = self.request.get("stream_id")
 
         # call service
-        status, result = self.callService('stream', 'remove_image', user_id=user_id, stream_id=stream_id,
+        status, result = self.callService('stream', 'remove_image', user_email=user_email, stream_id=stream_id,
                                           photo_key=photo_Key)
-
-
-        # user_id = users.get_current_user().user_id()
-        # stream_lst = Stream.query(Stream.user_id == user_id, Stream.stream_id == stream_id).fetch()
-        # img_lst = Image.query(Image.user_id == user_id, Image.img_id == photo_Key).fetch()
-        # curStream = stream_lst[0]
-        # curImg = img_lst[0]
-        # curStream.deleteImage(curImg)
 
         self.redirect('/viewStream?'+'stream_id='+stream_id)
 
@@ -270,8 +262,8 @@ class RemoveImageHandler(HTTPRequestHandler):
 class deleteStream(HTTPRequestHandler):
     def get(self):
         stream_id = self.request.get("stream_id")
-        user_id = users.get_current_user().user_id()
-        stream_lst = Stream.query(Stream.user_id == user_id, Stream.stream_id == stream_id).fetch()
+        user_email = users.get_current_user().email()
+        stream_lst = Stream.query(Stream.user_email == user_email, Stream.stream_id == stream_id).fetch()
         curStream = stream_lst[0]
         curStream.deleteStream()
         self.redirect('/manage')
@@ -279,8 +271,8 @@ class deleteStream(HTTPRequestHandler):
 
 class deleteStreamAll(HTTPRequestHandler):
     def get(self):
-        user_id = users.get_current_user().user_id()
-        stream_lst = Stream.query(Stream.user_id == user_id).fetch()
+        user_email = users.get_current_user().email()
+        stream_lst = Stream.query(Stream.user_email == user_email).fetch()
         print stream_lst
         for stream in stream_lst:
             print stream
@@ -290,7 +282,7 @@ class deleteStreamAll(HTTPRequestHandler):
 
 class viewAllStream(HTTPRequestHandler):
     def get(self):
-        user_id = users.get_current_user().user_id()
+        user_email = users.get_current_user().email()
 
         stream_lst = Stream.query().fetch()
 
@@ -323,7 +315,7 @@ class TrendingPageHandler(HTTPRequestHandler):
 
 class SearchHandler(HTTPRequestHandler):
     def get(self):
-        user_id = users.get_current_user().user_id()
+        user_email = users.get_current_user().email()
         logout_url = users.create_login_url(self.request.uri)
         logout_linktext = 'Logout'
         template_values = {
@@ -337,7 +329,7 @@ class SearchHandler(HTTPRequestHandler):
 class SearchRequestHandler(HTTPRequestHandler):
     def post(self):
         type = self.request.get("type")
-        user_id = users.get_current_user().user_id()
+        user_email = users.get_current_user().email()
         keyWord = self.request.get("keyWord")
         searchItem = keyWord.lower()
         stream_lst = Stream.query().fetch()
@@ -450,11 +442,11 @@ class SendReportCronJob(HTTPRequestHandler):
         2) %s - %s  \n
         3) %s - %s  \n
         """ % (trending_stream_lst[0].stream_name,
-               trending_stream_lst[0].user_id,
+               trending_stream_lst[0].user_email,
                trending_stream_lst[1].stream_name,
-               trending_stream_lst[1].user_id,
+               trending_stream_lst[1].user_email,
                trending_stream_lst[2].stream_name,
-               trending_stream_lst[2].user_id)
+               trending_stream_lst[2].user_email)
 
         for receiver_addr in report_email_list:
             mail.send_mail(sender_mail_addr, receiver_addr, subject, body)
@@ -531,7 +523,8 @@ app = webapp2.WSGIApplication([
     ('/ws/stream/query', StreamQueryService),
     ('/ws/stream/remove_image', RemoveImageService),
     ('/ws/stream/marker_query', MarkersQueryService),
-    ('/view_photo/([^/]+)?', ViewImageService)
+    ('/view_photo/([^/]+)?', ViewImageService),
+    ('/ws/stream/view_all', mViewAllStreamsService)
     ]
 
 

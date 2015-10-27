@@ -52,7 +52,7 @@
           {% for ustream in user_streams%}
             <tr>
               <td width="25%">
-                <a href="/viewStream?stream_id={{ustream['stream_id']}}&user_id={{ustream['user_id']}}">{{ ustream['stream_name'] }}</a>
+                <a href="/viewStream?stream_id={{ustream['stream_id']}}&user_email={{ustream['user_email']}}">{{ ustream['stream_name'] }}</a>
               </td>
               <td width="25%">
                 {% if ustream['last_add'] %}
@@ -107,7 +107,7 @@
                 </td>
                 <td width="15%">
                     <!--Unsubscribe column-->
-                    <a href="/subscribe?subscribe_bool=false&stream_id={{ sub_stream['stream_id'] }}&user_id={{ user.user_id() }}"> Unsubscribe</a>
+                    <a href="/subscribe?subscribe_bool=false&stream_id={{ sub_stream['stream_id'] }}&user_email={{ user.email() }}"> Unsubscribe</a>
                 </td>
             </tr>
             {% endfor %}
