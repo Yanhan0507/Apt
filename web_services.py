@@ -273,3 +273,11 @@ class MarkersQueryService(ServiceHandler):
                     marker = {"latitude": image.location.lat, "longitude": image.location.lon, "content":content}
                     markers_lst.append(marker)
             self.respond(markers=markers_lst, status="success")
+
+
+# Service for getting a list of all streams
+# Service Address: /ws/stream/view_all
+# Request Fields: USER_EMAIL (For enabling Subscription)
+class ViewAllStreamsService(ServiceHandler):
+    def get(self):
+        pass
