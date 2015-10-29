@@ -386,6 +386,7 @@ class mViewSingleStreamService(ServiceHandler):
 # Request Fields: location.getLatitude() + "_" + location.getLongitude()
 class mViewNearbyImages(ServiceHandler):
     def get(self):
+        stream_obj = Stream()
         print "mViewNearbyImages:: starts~"
 
         loc_str = self.request.get("loc_str")
@@ -416,7 +417,7 @@ class mViewNearbyImages(ServiceHandler):
         for idx in xrange(0, max_idx):
             image = sorted_imgs[idx]
             img_url_lst.append(SERVICE_URL+"/view_photo/"+str(image.blob_key))
-            stream_id_lst.append(Stream.get_stream_by_img_id(image.img_id))
+            stream_id_lst.append(stream_obj.get_stream_id_by_img_id(image.img_id))
 
             img_lat = radians(image.location.lat)
             img_lon = radians(image.location.lon)

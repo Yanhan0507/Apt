@@ -76,10 +76,15 @@ class Stream(ndb.Model):
         #   return the stream if the stream list is not empty
         return stream[0] if stream else stream
 
-    def get_stream_by_img_id(self, image_id):
-        stream = Stream.query(image_id in Stream.image_id_lst).fetch()
-        #   return the stream if the stream list is not empty
-        return stream[0] if stream else stream
+    def get_stream_id_by_img_id(self, image_id):
+        stream_lst = Stream.query().fetch()
+        for stream in stream_lst:
+            if image_id in stream.image_id_lst:
+                print 'get_stream_id_by_img_id:: found the stream id ', stream.stream_id, ' that has the image ',\
+                    image_id
+                return stream.stream_id
+        print 'get_stream_id_by_img_id:: unable to find a stream has the image ', image_id
+        return None
 
     def dumpStream(self):
         return {k:v if v is None else (str(v) if not hasattr(v,'__iter__') else map(str,v))
