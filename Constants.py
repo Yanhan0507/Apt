@@ -62,6 +62,9 @@ KEYWORD_MARKER_CONTENT = 'content'
 
 VIEW_ALL_START_INDEX = 'view_all_start_idx'
 NUM_STREAMS_PER_PAGE = 16
+NUM_IMG_PER_PAGE = 16
 IS_VIEW_ALL_SUBSCRIBED = 'is_view_all_subscribed'
+
+VIEW_STREAM_START_INDEX = 'view_stream_start_idx'
 
 NROF_IMGS_PER_PAGE = 3

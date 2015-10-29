@@ -524,7 +524,9 @@ app = webapp2.WSGIApplication([
     ('/ws/stream/remove_image', RemoveImageService),
     ('/ws/stream/marker_query', MarkersQueryService),
     ('/view_photo/([^/]+)?', ViewImageService),
-    ('/ws/stream/view_all', mViewAllStreamsService)
+    ('/ws/stream/view_all', mViewAllStreamsService),
+    ('/ws/stream/m_view_single_stream', mViewSingleStreamService)
+
     ]
 
 

@@ -324,3 +324,67 @@ class mViewAllStreamsService(ServiceHandler):
 
         self.respond(stream_id_lst=stream_id_lst, stream_name_lst=stream_name_lst,
                      cover_img_url_list=cover_img_url_list, last_idx=last_idx, status="success")
+
+
+# Service for getting a list of images from a stream
+# Service Address: /ws/stream/m_view_single_stream
+# Return: stream_owner, stream_name, img_id_lst, img_url_lst, upload_url, last_idx, nrof_imgs_in_stream
+# Request Fields: stream_id, start_idx
+class mViewSingleStreamService(ServiceHandler):
+    def get(self):
+        stream_id = self.request.get(IDENTIFIER_STREAM_ID)
+        start_idx = self.request.get(VIEW_STREAM_START_INDEX)
+
+        print "1"
+
+        if not start_idx:
+            start_idx = 0
+        else:
+            start_idx = int(start_idx)
+
+        stream_obj = Stream()
+        stream = stream_obj.get_stream(stream_id)
+
+        print "2"
+
+        # check if the stream exists
+        if not stream:
+            return self.respond(error="ViewStreamService >> Requested stream id %s does not exist." % stream_id)
+
+        # now start retrieving images
+        img_id_lst = []  # saving img ids
+        img_url_lst = []
+        stream_img_id_lst = stream.image_id_lst
+
+        nrof_imgs_in_stream = len(stream_img_id_lst)
+
+        print "3"
+
+        last_idx = start_idx + NUM_STREAMS_PER_PAGE
+
+        if last_idx >= nrof_imgs_in_stream:
+            last_idx = nrof_imgs_in_stream-1
+
+        idx_lst = xrange(start_idx, last_idx+1)
+
+        print "4"
+
+        for img_idx in idx_lst:
+            img_id = stream_img_id_lst[img_idx]
+            img_id_lst.append(img_id)
+            image = Image.get_image(img_id)
+            img_url_lst.append(SERVICE_URL+"/view_photo/"+str(image.blob_key))
+
+        # increase view count
+        stream.increase_view_cnt()
+
+        print "5"
+
+        # generate upload url
+        upload_url = blobstore.create_upload_url('/ws/stream/view_imgs')
+
+        print "6"
+
+        self.respond(stream_owner=stream.user_email, stream_name=stream.stream_name, img_id_lst=img_id_lst,
+                     img_url_lst=img_url_lst, last_idx=last_idx, nrof_imgs_in_stream=nrof_imgs_in_stream,
+                     upload_url=upload_url, status="success")
