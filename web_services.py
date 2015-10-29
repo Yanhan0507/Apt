@@ -10,6 +10,8 @@ import urllib
 from google.appengine.ext import ndb
 from google.appengine.api.images import get_serving_url
 
+from math import sin, cos, sqrt, atan2, radians
+
 #   import the constants
 from Constants import *
 
@@ -335,8 +337,6 @@ class mViewSingleStreamService(ServiceHandler):
         stream_id = self.request.get(IDENTIFIER_STREAM_ID)
         start_idx = self.request.get(VIEW_STREAM_START_INDEX)
 
-        print "1"
-
         if not start_idx:
             start_idx = 0
         else:
@@ -344,8 +344,6 @@ class mViewSingleStreamService(ServiceHandler):
 
         stream_obj = Stream()
         stream = stream_obj.get_stream(stream_id)
-
-        print "2"
 
         # check if the stream exists
         if not stream:
@@ -358,16 +356,12 @@ class mViewSingleStreamService(ServiceHandler):
 
         nrof_imgs_in_stream = len(stream_img_id_lst)
 
-        print "3"
-
         last_idx = start_idx + NUM_STREAMS_PER_PAGE
 
         if last_idx >= nrof_imgs_in_stream:
             last_idx = nrof_imgs_in_stream-1
 
         idx_lst = xrange(start_idx, last_idx+1)
-
-        print "4"
 
         for img_idx in idx_lst:
             img_id = stream_img_id_lst[img_idx]
@@ -378,13 +372,62 @@ class mViewSingleStreamService(ServiceHandler):
         # increase view count
         stream.increase_view_cnt()
 
-        print "5"
-
         # generate upload url
         upload_url = blobstore.create_upload_url('/ws/stream/view_imgs')
-
-        print "6"
 
         self.respond(stream_owner=stream.user_email, stream_name=stream.stream_name, img_id_lst=img_id_lst,
                      img_url_lst=img_url_lst, last_idx=last_idx, nrof_imgs_in_stream=nrof_imgs_in_stream,
                      upload_url=upload_url, status="success")
+
+
+# Service for getting a list of images sorted by location
+# Service Address: ws/stream/m_view_nearby_photos
+# Return: img_url_lst, distance_lst, stream_id_lst
+# Request Fields: location.getLatitude() + "_" + location.getLongitude()
+class mViewNearbyImages(ServiceHandler):
+    def get(self):
+        print "mViewNearbyImages:: starts~"
+
+        loc_str = self.request.get("loc_str")
+        loc = loc_str.split('_')
+        lat = float(loc[0])
+        lon = float(loc[1])
+
+        print "mViewNearbyImages:: get location", lat, lon
+        images = Image.query().fetch()
+
+        sorted_imgs = sorted(images, key=lambda image: image.date, reverse=True)
+
+        max_idx = len(sorted_imgs)
+
+        print "mViewNearbyImages:: len(sorted_imgs)=", max_idx
+
+        if max_idx >= NUM_IMG_PER_PAGE:
+            max_idx = NUM_IMG_PER_PAGE
+
+        img_url_lst = list()
+        stream_id_lst = list()
+        distance_lst = list()
+
+        R = 6373.0
+        r_m_lat = radians(lat)
+        r_m_lon = radians(lon)
+
+        for idx in xrange(0, max_idx):
+            image = sorted_imgs[idx]
+            img_url_lst.append(SERVICE_URL+"/view_photo/"+str(image.blob_key))
+            stream_id_lst.append(Stream.get_stream_by_img_id(image.img_id))
+
+            img_lat = radians(image.location.lat)
+            img_lon = radians(image.location.lon)
+            dlat = r_m_lat - img_lat
+            dlon = r_m_lon - img_lon
+            a = (sin(dlat / 2)) ** 2 + cos(r_m_lat) * cos(img_lat) * (sin(dlon / 2)) ** 2
+            c = 2 * atan2(sqrt(a), sqrt(1 - a))
+            distance = R * c
+
+            distance_lst.append(distance)
+
+        print "mViewNearbyImages:: ldistance_lst=", str(distance_lst)
+
+        self.respond(img_url_lst=img_url_lst, stream_id_lst=stream_id_lst, distance_lst=distance_lst, status="success")
