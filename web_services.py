@@ -432,3 +432,43 @@ class mViewNearbyImages(ServiceHandler):
         print "mViewNearbyImages:: ldistance_lst=", str(distance_lst)
 
         self.respond(img_url_lst=img_url_lst, stream_id_lst=stream_id_lst, distance_lst=distance_lst, status="success")
+
+
+# Service for getting a list of stream by name or description
+# Service Address: ws/stream/m_search
+# Return: stream_id_lst, stream_name_lst, cover_img_url_list
+# Request Fields: search_keyword, search_type
+class mSearchStreams(ServiceHandler):
+    def get(self):
+        # get parameters from the request
+        search_keyword = self.request.get(IDENTIFIER_SEARCH_KEYWORD)
+        search_type = self.request.get(IDENTIFIER_SEARCH_TYPE)
+        search_keyword = str(search_keyword).lower()
+
+        # query streams
+        stream_lst = Stream.query().fetch()
+        res_stream_lst = []
+        stream_id_lst = []
+        stream_name_lst = []
+        cover_img_url_list = []
+
+        if search_type == "title":
+            for stream_iter in stream_lst:
+                if stream_iter.stream_name:
+                    if search_keyword in stream_iter.stream_name.lower():
+                        res_stream_lst.append(stream_iter)
+        else:
+            for stream_iter in stream_lst:
+                if stream_iter.description:
+                    if search_keyword in stream_iter.description.lower():
+                        res_stream_lst.append(stream_iter)
+
+        res_stream_lst = sorted(res_stream_lst, key=lambda stream:stream.last_add, reverse=True)
+
+        for stream_itr in res_stream_lst:
+            stream_id_lst.append(stream_itr.stream_id)
+            stream_name_lst.append(stream_itr.stream_name)
+            cover_img_url_list.append(stream_itr.cover_url)
+
+        self.respond(stream_id_lst=stream_id_lst, stream_name_lst=stream_name_lst,
+                     cover_img_url_list=cover_img_url_list, status="success")

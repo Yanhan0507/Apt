@@ -67,4 +67,7 @@ IS_VIEW_ALL_SUBSCRIBED = 'is_view_all_subscribed'
 
 VIEW_STREAM_START_INDEX = 'view_stream_start_idx'
 
+IDENTIFIER_SEARCH_KEYWORD = 'search_keyword'
+IDENTIFIER_SEARCH_TYPE = 'search_type'
+
 NROF_IMGS_PER_PAGE = 3
