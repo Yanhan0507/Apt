@@ -177,6 +177,17 @@ class RemoveImageService(ServiceHandler):
 # UploadImageService
 # Service Address: /ws/stream/upload_image
 # Request Fields: IDENTIFIER_CURRENT_USER_ID, IDENTIFIER_STREAM_ID, IDENTIFIER_STREAM_DESC
+
+
+class GetUploadURL(webapp2.RequestHandler):
+	def get(self):
+		upload_url = blobstore.create_upload_url('/upload_image')
+		upload_url = str(upload_url)
+		dictPassed = {'upload_url':upload_url}
+		jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
+		self.response.write(jsonObj)
+
+
 class UploadImageService(blobstore_handlers.BlobstoreUploadHandler):
     def post(self):
         user_email = self.request.get(IDENTIFIER_USER_EMAIL)
@@ -472,3 +483,4 @@ class mSearchStreams(ServiceHandler):
 
         self.respond(stream_id_lst=stream_id_lst, stream_name_lst=stream_name_lst,
                      cover_img_url_list=cover_img_url_list, status="success")
+
