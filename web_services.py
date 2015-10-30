@@ -182,6 +182,7 @@ class UploadImageService(blobstore_handlers.BlobstoreUploadHandler):
         user_email = self.request.get(IDENTIFIER_USER_EMAIL)
         stream_id = self.request.get(IDENTIFIER_STREAM_ID)
         description = self.request.get(IDENTIFIER_STREAM_DESC)
+        location = self.request.get(IDENTIFIER_LOCATION)
 
         print 'UploadImageService >> get upload image request ', len(self.get_uploads())
 
@@ -191,14 +192,20 @@ class UploadImageService(blobstore_handlers.BlobstoreUploadHandler):
             image_id = uuid.uuid4()
             print "UploadImageService >> Upload new image with blob_key: " + str(upload.key())
 
-            # Generate a random location - Phase II requirement
-            rand_loc = ndb.GeoPt(random.uniform(-90, 90), random.uniform(0, 90))
+            if not location:
+                # Generate a random location - Phase II requirement
+                location = ndb.GeoPt(random.uniform(-90, 90), random.uniform(0, 90))
+            else:
+                loc_cor = location.split("_")
+                if len(loc_cor)!=2:
+                    print "length of the location parameter is not 2. (", location, ")"
+                location = ndb.GeoPt(long(float(loc_cor[0])), long(float(loc_cor[1])))
 
             user_image = Image(user_email=user_email,
                                img_id=str(image_id),
                                content=description,
                                blob_key=upload.key(),
-                               location=rand_loc)
+                               location=location)
             # stream_lst = Stream.query(Stream.user_id == user_id, Stream.stream_id == stream_id).fetch()
             # cur_stream = stream_lst[0]
             current_stream = Stream().get_stream(stream_id)
@@ -361,7 +368,7 @@ class mViewSingleStreamService(ServiceHandler):
         if last_idx >= nrof_imgs_in_stream:
             last_idx = nrof_imgs_in_stream-1
 
-        idx_lst = xrange(start_idx, last_idx+1)
+        idx_lst = xrange(start_idx, last_idx)
 
         for img_idx in idx_lst:
             img_id = stream_img_id_lst[img_idx]
@@ -473,10 +480,12 @@ class mSearchStreams(ServiceHandler):
         self.respond(stream_id_lst=stream_id_lst, stream_name_lst=stream_name_lst,
                      cover_img_url_list=cover_img_url_list, status="success")
 
-class GetUploadURL(webapp2.RequestHandler):
-	def get(self,streamid):
-		upload_url = blobstore.create_upload_url('/upload_image')
-		upload_url = str(upload_url)
-		dictPassed = {'upload_url':upload_url}
-		jsonObj = json.dumps(dictPassed, sort_keys=True,indent=4, separators=(',', ': '))
-		self.response.write(jsonObj)
+
+# Service for getting a list of stream by name or description
+# Service Address: /ws/stream/m_get_upload_url
+# Return: upload_url
+# Request Fields: None.
+class mGetUploadURL(ServiceHandler):
+    def get(self):
+        upload_url = blobstore.create_upload_url('/ws/stream/upload_image')
+        self.respond(upload_url=upload_url, status="success")

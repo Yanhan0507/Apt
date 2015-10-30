@@ -528,7 +528,7 @@ app = webapp2.WSGIApplication([
     ('/ws/stream/m_view_single_stream', mViewSingleStreamService),
     ('/ws/stream/m_view_nearby_photos', mViewNearbyImages),
     ('/ws/stream/m_search', mSearchStreams),
-    ('/ws/stream/getUploadURL',GetUploadURL)
+    ('/ws/stream/m_get_upload_url', mGetUploadURL)
     ]
 
 

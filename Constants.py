@@ -71,3 +71,5 @@ IDENTIFIER_SEARCH_KEYWORD = 'search_keyword'
 IDENTIFIER_SEARCH_TYPE = 'search_type'
 
 NROF_IMGS_PER_PAGE = 3
+
+IDENTIFIER_LOCATION = 'img_location'
